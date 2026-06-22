@@ -1,0 +1,410 @@
+<!-- Finanzrechner — fully self-contained drop-in snippet. All styles inlined. -->
+<style>
+	/* Pseudo-element rules that can't be expressed as inline style attributes */
+	input[type="number"]::-webkit-outer-spin-button,
+	input[type="number"]::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+	input[type="number"] {
+		-moz-appearance: textfield !important;
+	}
+</style>
+
+<div style="background-color:#fff;padding:1.5rem;border-radius:0.75rem;box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1),0 4px 6px -4px rgb(0 0 0 / 0.1);width:100%;">
+	<h1 style="font-size:1.875rem;line-height:2.25rem;font-weight:700;margin-bottom:1.5rem;text-align:center;color:rgb(31 41 55);">
+		Übernahme des Elternbeitrags
+	</h1>
+	<section style="margin-top:1.5rem;padding:1rem;border-top:1px solid rgb(229 231 235);text-align:center;">
+		<p>Some explanation blabla </p>
+	</section>
+
+	<form id="calc-form" style="display:flex;flex-direction:column;gap:1.5rem;">
+		<!-- Einkommen Kind -->
+		<fieldset style="border:1px solid rgb(229 231 235);padding:1rem;border-radius:0.5rem;box-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);background-color:rgb(249 250 251);">
+			<legend style="font-weight:600;color:rgb(55 65 81);margin-bottom:0.75rem;">Einkommen Kind</legend>
+			<div style="display:grid;grid-template-columns:260px 1fr;column-gap:1rem;row-gap:1rem;align-items:flex-start;">
+				<label for="child_benefit" style="text-align:right;">Kindergeld</label>
+				<div style="position:relative;">
+					<input id="child_benefit" type="number" name="child_benefit" step="0.01" min="0" inputmode="decimal" placeholder="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(226 232 240);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+
+				<label for="child_support" style="text-align:right;">Kindesunterhalt</label>
+				<div style="position:relative;">
+					<input id="child_support" type="number" name="child_support" step="0.01" min="0" inputmode="decimal" placeholder="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(226 232 240);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+			</div>
+		</fieldset>
+
+		<!-- Einkommen Eltern -->
+		<fieldset style="border:1px solid rgb(229 231 235);padding:1rem;border-radius:0.5rem;box-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);background-color:rgb(249 250 251);">
+			<legend style="font-weight:600;color:rgb(55 65 81);margin-bottom:0.75rem;">Einkommen Eltern</legend>
+			<div style="display:grid;grid-template-columns:260px 1fr 1fr;column-gap:1.5rem;row-gap:1rem;align-items:center;">
+				<div></div>
+				<div style="font-weight:600;" role="columnheader">1. Elternteil</div>
+				<div style="font-weight:600;" role="columnheader">2. Elternteil</div>
+
+				<label for="split_a_income" style="text-align:right;">Einkünfte</label>
+				<div style="position:relative;">
+					<input id="split_a_income" type="number" name="split_a_income" step="0.01" min="0" inputmode="decimal" placeholder="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(226 232 240);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+				<div style="position:relative;">
+					<input id="split_b_income" type="number" name="split_b_income" step="0.01" min="0" inputmode="decimal" placeholder="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(226 232 240);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+
+				<label for="split_a_expenses" style="text-align:right;">Arbeitsmittel</label>
+				<div style="position:relative;">
+					<input id="split_a_expenses" type="number" name="split_a_expenses" step="0.01" min="0" inputmode="decimal" placeholder="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(226 232 240);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+				<div style="position:relative;">
+					<input id="split_b_expenses" type="number" name="split_b_expenses" step="0.01" min="0" inputmode="decimal" placeholder="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(226 232 240);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+
+				<label for="split_a_commute" style="text-align:right;">Fahrtkosten</label>
+				<div style="position:relative;">
+					<input id="split_a_commute" type="number" name="split_a_commute" step="0.01" min="0" inputmode="decimal" placeholder="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(226 232 240);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+				<div style="position:relative;">
+					<input id="split_b_commute" type="number" name="split_b_commute" step="0.01" min="0" inputmode="decimal" placeholder="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(226 232 240);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+
+				<label for="split_a_other_income" style="text-align:right;">Sonstige Einkünfte</label>
+				<div style="position:relative;">
+					<input id="split_a_other_income" type="number" name="split_a_other_income" step="0.01" min="0" inputmode="decimal" placeholder="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(226 232 240);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+				<div style="position:relative;">
+					<input id="split_b_other_income" type="number" name="split_b_other_income" step="0.01" min="0" inputmode="decimal" placeholder="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(226 232 240);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+			</div>
+		</fieldset>
+
+		<!-- Abzüge -->
+		<fieldset style="border:1px solid rgb(229 231 235);padding:1rem;border-radius:0.5rem;box-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);background-color:rgb(249 250 251);">
+			<legend style="font-weight:600;color:rgb(55 65 81);margin-bottom:0.75rem;">Abzüge</legend>
+			<div style="display:grid;grid-template-columns:260px 1fr;column-gap:1rem;row-gap:1rem;align-items:center;">
+				<label for="insurance_home" style="text-align:right;">Hausrat- und Haftpflichtversicherung</label>
+				<div style="position:relative;">
+					<input id="insurance_home" type="number" name="insurance_home" step="0.01" min="0" inputmode="decimal" placeholder="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(226 232 240);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+
+				<label for="insurance_accident" style="text-align:right;">Unfallversicherung</label>
+				<div style="position:relative;">
+					<input id="insurance_accident" type="number" name="insurance_accident" step="0.01" min="0" inputmode="decimal" placeholder="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(226 232 240);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+
+				<label for="other_deductions" style="text-align:right;">Sonstige Abzüge</label>
+				<div style="position:relative;">
+					<input id="other_deductions" type="number" name="other_deductions" step="0.01" min="0" inputmode="decimal" placeholder="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(226 232 240);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+			</div>
+		</fieldset>
+
+		<!-- Bedarfswerte -->
+		<fieldset style="border:1px solid rgb(229 231 235);padding:1rem;border-radius:0.5rem;box-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);background-color:rgb(249 250 251);">
+			<legend style="font-weight:600;color:rgb(55 65 81);margin-bottom:0.75rem;">Bedarfswerte</legend>
+			<div style="display:grid;grid-template-columns:500px 1fr;column-gap:1.5rem;row-gap:1rem;align-items:center;">
+				<!-- Familienzuschlag -->
+				<div style="display:flex;justify-content:space-between;">
+					<label for="family_slider" style="text-align:right;">Familienzuschlag (weitere Personen)</label>
+					<div style="display:flex;align-items:center;gap:0.75rem;">
+						<input id="family_slider" type="range" name="family_slider" min="1" max="6" step="1" value="1" style="width:100%;" />
+						<span id="family_slider_value" style="min-width:1.5rem;text-align:center;font-size:0.875rem;line-height:1.25rem;font-weight:500;">1</span>
+					</div>
+				</div>
+				<div style="position:relative;">
+					<input id="family_amount" name="family_amount" type="text" value="395,00" readonly data-value="395" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(243 244 246);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+
+				<!-- Miete -->
+				<div style="display:flex;justify-content:space-between;">
+					<label for="rent_slider" style="text-align:right;">Miete (Höchstmiete)</label>
+					<div style="display:flex;align-items:center;gap:0.75rem;">
+						<input id="rent_slider" type="range" name="rent_slider" min="1" max="6" step="1" value="1" style="width:100%;" />
+						<span id="rent_slider_value" style="min-width:1.5rem;text-align:center;font-size:0.875rem;line-height:1.25rem;font-weight:500;">1</span>
+					</div>
+				</div>
+				<div style="position:relative;">
+					<input id="rent_amount" name="rent_amount" type="text" value="0,00" readonly data-value="0" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(243 244 246);transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+
+				<!-- Besondere Belastungen -->
+				<label for="special_burdon" style="text-align:right;font-weight:600;">
+					Besondere Belastungen(z.B. Geschwisterkindbeitrag, geleisteter Unterhalt)
+				</label>
+				<div style="position:relative;">
+					<input id="special_burdon" name="special_burdon" type="text" value="0,00" style="width:100%;text-align:right;padding:0.125rem 1.75rem 0.125rem 0;outline:none;border:none;border-bottom:1px solid rgb(229 231 235);border-top-left-radius:0.25rem;border-top-right-radius:0.25rem;background-color:rgb(243 244 246);font-weight:600;transition:all 150ms cubic-bezier(0.4,0,0.2,1);" />
+					<span style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);color:rgb(107 114 128);pointer-events:none;">€</span>
+				</div>
+			</div>
+		</fieldset>
+	</form>
+
+	<!-- Ergebnis -->
+	<section style="margin-top:1.5rem;padding:1rem;border-top:1px solid rgb(229 231 235);text-align:center;">
+		<h2 style="font-weight:600;font-size:1.125rem;line-height:1.75rem;margin-bottom:0.5rem;">Ergebnis</h2>
+
+		<!-- visualization: horizontal bar with segments and markers -->
+		<div id="visualization" style="position:relative;margin-top:4rem;">
+			<div style="position:relative;height:2.5rem;border-radius:0.5rem;overflow:hidden;background-color:rgb(229 231 235);box-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);">
+				<!-- three colored segments (widths set in JS) -->
+				<div id="segment-green" style="position:absolute;top:0;left:0;height:100%;background:#22c55e;z-index:5;transition:width 160ms ease,left 160ms ease;"></div>
+				<div id="segment-yellow" style="position:absolute;top:0;height:100%;background:#facc15;z-index:5;transition:width 160ms ease,left 160ms ease;"></div>
+				<div id="segment-red" style="position:absolute;top:0;height:100%;background:#dc2626;z-index:5;transition:width 160ms ease,left 160ms ease;"></div>
+
+				<!-- thin markers for thresholds -->
+				<div id="marker-ekg1" title="EKG1" style="position:absolute;top:-6px;height:calc(100% + 12px);width:3px;background:rgb(0 0 0 / 0.8);transform:translateX(-50%);pointer-events:none;z-index:20;"></div>
+				<div id="marker-ekg3" title="EKG3" style="position:absolute;top:-6px;height:calc(100% + 12px);width:3px;background:rgb(0 0 0 / 0.8);transform:translateX(-50%);pointer-events:none;z-index:20;"></div>
+				<div id="marker-ekg4" title="EKG4" style="position:absolute;top:-6px;height:calc(100% + 12px);width:3px;background:rgb(0 0 0 / 0.8);transform:translateX(-50%);pointer-events:none;z-index:20;"></div>
+
+				<!-- result indicator -->
+				<div id="result-indicator" title="Ergebnis" style="position:absolute;top:0;bottom:0;width:6px;background:#111;transform:translateX(-50%);z-index:30;pointer-events:none;transition:left 160ms ease,background-color 180ms ease,box-shadow 180ms ease;box-shadow:0 0 14px rgb(0 0 0 / 0.15);"></div>
+			</div>
+
+			<!-- result bubble (shown above the bar) -->
+			<div id="result-bubble" aria-live="polite" style="position:absolute;transform:translateX(-50%);bottom:calc(100% + 10px);left:50%;padding:6px 10px;font-weight:600;background:#ffffff;border-radius:8px;border:2px solid rgb(0 0 0 / 0.08);box-shadow:0 6px 18px rgb(16 24 40 / 0.12);z-index:50;pointer-events:none;min-width:72px;text-align:center;transition:left 160ms ease,border-color 160ms ease,background-color 160ms ease,color 160ms ease;">—</div>
+
+			<div id="visualization-labels" style="position:relative;margin-top:0.5rem;height:2rem;">
+				<span id="label-ekg1" style="position:absolute;top:0;left:0%;transform:translateX(-50%);font-size:0.75rem;color:#4b5563;white-space:nowrap;background:rgba(255,255,255,0.95);padding:2px 6px;border-radius:6px;border:1px solid rgb(0 0 0 / 0.06);box-shadow:0 1px 2px rgb(0 0 0 / 0.04);z-index:40;">EKG1 — 0,00 €</span>
+				<span id="label-ekg3" style="position:absolute;top:0;left:50%;transform:translateX(-50%);font-size:0.75rem;color:#4b5563;white-space:nowrap;background:rgba(255,255,255,0.95);padding:2px 6px;border-radius:6px;border:1px solid rgb(0 0 0 / 0.06);box-shadow:0 1px 2px rgb(0 0 0 / 0.04);z-index:40;">EKG3 — 0,00 €</span>
+				<span id="label-ekg4" style="position:absolute;top:0;left:100%;transform:translateX(-50%);font-size:0.75rem;color:#4b5563;white-space:nowrap;background:rgba(255,255,255,0.95);padding:2px 6px;border-radius:6px;border:1px solid rgb(0 0 0 / 0.06);box-shadow:0 1px 2px rgb(0 0 0 / 0.04);z-index:40;">EKG4 — 0,00 €</span>
+			</div>
+		</div>
+
+		<p id="result-message" style="font-weight:500;color:rgb(55 65 81);"></p>
+	</section>
+</div>
+
+<script>
+	(function () {
+		const form = document.getElementById("calc-form");
+
+		form.addEventListener("input", () => {
+			recalculate();
+		});
+
+		// initial calculation
+		recalculate();
+
+		function recalculate() {
+			const data = getFormValues(form);
+
+			const GRUNDBETRAG = 1126;
+			const FAMILY_FACTOR = 395;
+
+			const rentTable = {
+				1: 511,
+				2: 619,
+				3: 737,
+				4: 858,
+				5: 982,
+				6: 1101,
+			};
+
+			const familySize = data.family_slider;
+			const rentLevel = data.rent_slider;
+
+			const familyAmount = FAMILY_FACTOR * familySize;
+			const rentAmount = rentTable[rentLevel] || 0;
+			const rent20 = Math.floor(rentAmount * 1.2);
+
+			const familyEl = document.getElementById("family_amount");
+			familyEl.value = formatNumber(familyAmount);
+			familyEl.dataset.value = String(familyAmount);
+
+			const rentEl = document.getElementById("rent_amount");
+			rentEl.value = formatNumber(rent20);
+			rentEl.dataset.value = String(rent20);
+
+			document.getElementById("family_slider_value").textContent = familySize;
+			document.getElementById("rent_slider_value").textContent = rentLevel;
+
+			const ekg1 = GRUNDBETRAG + familyAmount + rent20;
+			const ekg3 = ekg1 * 1.2 + data.special_burdon;
+			const ekg4 = ekg1 * 1.3 + data.special_burdon;
+
+			const totalIncome = calculateTotalIncome(data);
+			const totalExpenses = calculateTotalExpenses(data);
+
+			const result = totalIncome - totalExpenses;
+
+			const resultMessage = document.getElementById("result-message");
+			resultMessage.style.fontWeight = "500";
+
+			if (result < ekg3) {
+				resultMessage.textContent = "Die Kosten werden vollständig übernommen.";
+				resultMessage.style.color = "rgb(22 163 74)"; // green-600
+			} else if (result < ekg4) {
+				resultMessage.textContent = "Die Kosten werden hälftig übernommen.";
+				resultMessage.style.color = "rgb(202 138 4)"; // yellow-600
+			} else {
+				resultMessage.textContent = "Es erfolgt keine Übernahme der Kosten.";
+				resultMessage.style.color = "rgb(220 38 38)"; // red-600
+			}
+
+			// --- Visualization update (updates EKG bar and indicator) ---
+			const segG = document.getElementById("segment-green");
+			const segY = document.getElementById("segment-yellow");
+			const segR = document.getElementById("segment-red");
+			const m1 = document.getElementById("marker-ekg1");
+			const m3 = document.getElementById("marker-ekg3");
+			const m4 = document.getElementById("marker-ekg4");
+			const resInd = document.getElementById("result-indicator");
+			const lblEkg1 = document.getElementById("label-ekg1");
+			const lblEkg3 = document.getElementById("label-ekg3");
+			const lblEkg4 = document.getElementById("label-ekg4");
+
+			if (segG && segY && segR && m1 && m3 && m4 && resInd) {
+				let min = Math.min(ekg1, result);
+				let max = Math.max(ekg4, result, ekg1);
+
+				const span = max - min;
+				const padding =
+					span > 0 ? span * 0.12 : Math.max(100, Math.abs(max) * 0.12, 100);
+				min -= padding;
+				max += padding;
+
+				const range = max - min || 1;
+				const toPct = (v) => ((v - min) / range) * 100;
+
+				const pEkg1 = Math.min(100, Math.max(0, toPct(ekg1)));
+				const pEkg3 = Math.min(100, Math.max(0, toPct(ekg3)));
+				const pEkg4 = Math.min(100, Math.max(0, toPct(ekg4)));
+				const pResult = Math.min(100, Math.max(0, toPct(result)));
+
+				segG.style.left = "0%";
+				segG.style.width = `${Math.max(0, pEkg3)}%`;
+
+				segY.style.left = `${pEkg3}%`;
+				segY.style.width = `${Math.max(0, pEkg4 - pEkg3)}%`;
+
+				segR.style.left = `${pEkg4}%`;
+				segR.style.width = `${Math.max(0, 100 - pEkg4)}%`;
+
+				m1.style.left = `${pEkg1}%`;
+				m3.style.left = `${pEkg3}%`;
+				m4.style.left = `${pEkg4}%`;
+				if (lblEkg1) {
+					lblEkg1.style.left = `${pEkg1}%`;
+					lblEkg1.textContent = `EKG1 - ${formatEUR(ekg1)}`;
+				}
+				if (lblEkg3) {
+					lblEkg3.style.left = `${pEkg3}%`;
+					lblEkg3.textContent = `EKG3 - ${formatEUR(ekg3)}`;
+				}
+				if (lblEkg4) {
+					lblEkg4.style.left = `${pEkg4}%`;
+					lblEkg4.textContent = `EKG4 - ${formatEUR(ekg4)}`;
+				}
+
+				resInd.style.left = `${pResult}%`;
+				resInd.setAttribute("title", `Ergebnis: ${formatEUR(result)}`);
+				resInd.setAttribute("aria-valuenow", String(Math.round(pResult)));
+
+				const bubble = document.getElementById("result-bubble");
+				if (bubble) {
+					bubble.style.left = `${pResult}%`;
+					bubble.textContent = formatEUR(result);
+
+					if (result < ekg3) {
+						bubble.style.borderColor = "#16a34a";
+						bubble.style.color = "#065f46";
+						bubble.style.background = "rgba(220, 253, 220, 0.95)";
+						resInd.style.background = "#16a34a";
+						resInd.style.boxShadow = "0 0 18px rgba(16,185,129,0.15)";
+					} else if (result < ekg4) {
+						bubble.style.borderColor = "#f59e0b";
+						bubble.style.color = "#92400e";
+						bubble.style.background = "rgba(255, 249, 230, 0.95)";
+						resInd.style.background = "#f59e0b";
+						resInd.style.boxShadow = "0 0 18px rgba(245,158,11,0.12)";
+					} else {
+						bubble.style.borderColor = "#dc2626";
+						bubble.style.color = "#7f1d1d";
+						bubble.style.background = "rgba(255, 238, 238, 0.95)";
+						resInd.style.background = "#dc2626";
+						resInd.style.boxShadow = "0 0 20px rgba(220,38,38,0.14)";
+					}
+				}
+			}
+		}
+
+		function calculateTotalIncome(data) {
+			const parentIncome =
+				data.split_a_income +
+				data.split_a_other_income +
+				data.split_b_income +
+				data.split_b_other_income;
+
+			return data.child_benefit + data.child_support + parentIncome;
+		}
+
+		function calculateTotalExpenses(data) {
+			const parentExpenses =
+				data.split_a_expenses +
+				data.split_a_commute +
+				data.split_b_expenses +
+				data.split_b_commute;
+
+			return (
+				parentExpenses +
+				data.insurance_home +
+				data.insurance_accident +
+				data.other_deductions
+			);
+		}
+
+		function getFormValues(form) {
+			const values = {};
+
+			for (const element of form.elements) {
+				if (!element.name) continue;
+
+				if (element.dataset && element.dataset.value !== undefined) {
+					values[element.name] = Number.parseFloat(element.dataset.value) || 0;
+					continue;
+				}
+
+				if (element.type === "checkbox") {
+					values[element.name] = element.checked;
+				} else {
+					values[element.name] = toNumber(element.value);
+				}
+			}
+
+			return values;
+		}
+
+		function toNumber(value) {
+			return Number.parseFloat(value) || 0;
+		}
+
+		function formatEUR(value) {
+			return new Intl.NumberFormat("de-DE", {
+				style: "currency",
+				currency: "EUR",
+			}).format(value);
+		}
+
+		function formatNumber(value) {
+			return new Intl.NumberFormat("de-DE", {
+				minimumFractionDigits: 2,
+				maximumFractionDigits: 2,
+			}).format(value);
+		}
+	})();
+</script>

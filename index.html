@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kita-Zuschuss Rechner — Volt Karlsruhe</title>
+    <!-- DEV-ONLY chrome: a Ubuntu webfont + page background so the standalone
+         preview matches voltsite. Stripped from the production drop-in fragment
+         by build-droppable.mjs (host already provides Ubuntu + page styling). -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style id="kzr-dev-only">
+      body {
+        margin: 0;
+        background: #f1f5f9;
+        font-family: "Ubuntu", system-ui, sans-serif;
+        padding: 1.5rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="kita-zuschuss-rechner-root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

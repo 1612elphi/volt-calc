@@ -1,0 +1,28 @@
+{
+  "name": "calc",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "ingest": "node ingest.mjs",
+    "build:app": "vite build",
+    "build": "vite build && node build-droppable.mjs"
+  },
+  "keywords": [],
+  "author": "Johannes Bier",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.18",
+    "@tailwindcss/vite": "^4.1.18",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.1.18",
+    "vite": "^6.4.1",
+    "vite-plugin-html": "^3.2.2",
+    "vite-plugin-singlefile": "^2.3.0"
+  }
+}

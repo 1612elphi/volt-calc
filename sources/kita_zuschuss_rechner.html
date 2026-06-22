@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kita-Zuschuss Rechner – Volt Karlsruhe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Ubuntu', 'system-ui', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { margin: 0; background: transparent; }
+    /* Hide number input spinners */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+// ─── CONSTANTS ───────────────────────────────────────────────
+const VOLT = "#502379";
+const VOLT_LIGHT = "#f0ecf5";
+const VOLT_FOCUS = "#5c2d91";
+const INPUT_BG = "#eef1f8";
+const LANG_BG = "#e8ecf3";
+
+const REGELBEDARFSSTUFE_1 = 563;
+const GRUNDBETRAG = REGELBEDARFSSTUFE_1 * 2;
+const FAMILIENZUSCHLAG = Math.ceil(REGELBEDARFSSTUFE_1 * 0.7);
+const ARBEITSMITTEL_PAUSCHALE = 5.20;
+const KINDERGELD = 255;
+const HOECHSTMIETE = { 1: 613, 2: 743, 3: 884, 4: 1030, 5: 1178, 6: 1321 };
+const EKG_FAKTOR_VOLL = 1.2;
+const EKG_FAKTOR_HALB = 1.3;
+
+// ─── i18n ────────────────────────────────────────────────────
+const LANGS = [
+  { code: "de", label: "Deutsch", dir: "ltr" },
+  { code: "en", label: "English", dir: "ltr" },
+  { code: "tr", label: "Türkçe", dir: "ltr" },
+  { code: "uk", label: "Українська", dir: "ltr" },
+  { code: "ar", label: "العربية", dir: "rtl" },
+];
+
+const T = {
+  de: {
+    brand: "Volt Karlsruhe",
+    title: "Kita-Zuschuss Rechner",
+    subtitle: "Vorab-Prüfung nach § 90 SGB VIII · Einkommensgrenzen gemäß §§ 85 ff. SGB XII inkl. Karlsruher Erweiterung (GR-Beschluss 2021)",
+    disclaimer: "⚠️ Unverbindliche Orientierung – kein Bescheid. Die tatsächliche Berechnung erfolgt durch die Wirtschaftliche Jugendhilfe der Stadt Karlsruhe.",
+    privacy: "🔒 Ihre Daten bleiben bei Ihnen – alle Eingaben werden ausschließlich in Ihrem Browser berechnet und nicht gespeichert oder übertragen.",
+    schnellpruefung: "Schnellprüfung",
+    sozialleistungLabel: "Bezug von Bürgergeld, Wohngeld, Kinderzuschlag oder AsylbLG",
+    sozialleistungHint: "Falls ja: automatisch 100 % Zuschuss, keine Einkommensprüfung nötig.",
+    haushalt: "Haushalt",
+    personenImHaushalt: "Personen im Haushalt",
+    personenHint: "Alle Personen im Haushalt (Eltern + Kinder)",
+    alleinerziehend: "Alleinerziehend",
+    einkommen: "Einkommen",
+    einkommenElternteil1: "Einkommen Elternteil 1",
+    einkommenElternteil2: "Einkommen Elternteil 2",
+    nettoLabel: "Monatliches Nettoeinkommen",
+    nettoHint: "Durchschnitt der letzten 6 Monate inkl. anteiligem Urlaubs-/Weihnachtsgeld. Auch: Krankengeld, Elterngeld, Rente.",
+    fahrtkostenLabel: "Fahrtkosten (monatlich)",
+    fahrtkostenHint: "ÖPNV-Monatsticket oder bei PKW: einfache Strecke in km × 0,05 € × 2 × ca. 22 Arbeitstage. Nur ausfüllen bei Berufstätigkeit.",
+    sonstigeLabel: "Sonstige Einkünfte",
+    sonstigeHint: "z.B. Mieteinnahmen, Kapitalerträge, BAföG, Unterhalt für eigene Person",
+    antragskindAbzuege: "Antragskind & Abzüge",
+    kindesunterhaltLabel: "Kindesunterhalt (empfangen)",
+    kindesunterhaltHint: "Unterhalt/Unterhaltsvorschuss für das Kind, für das beantragt wird",
+    versicherungLabel: "Versicherungsbeiträge (Abzug)",
+    versicherungHint: "Monatlicher Betrag. Bei jährlicher Zahlung: Betrag ÷ 12. Hausrat-, Haftpflicht-, Unfallversicherung, Gewerkschaftsbeitrag.",
+    besondereBelastungen: "Besondere Belastungen",
+    belastungenLabel: "Betreuungsbeiträge anderer Kinder / Unterhalt",
+    belastungenHint: "Monatlicher Betrag. Kita-, Hort-, Kernzeitbeiträge für Geschwisterkinder + Unterhaltszahlungen für Kinder außerhalb des Haushalts. NICHT die Kosten des Antragskindes.",
+    kitaBeitrag: "Kita-Beitrag des Antragskindes",
+    kitaBeitragLabel: "Monatlicher Elternbeitrag",
+    kitaBeitragHint: "Der Beitrag, der übernommen werden soll",
+    ergebnis: "Voraussichtlicher Zuschuss",
+    monatlicheLeistung: "Monatliche Leistung",
+    einordnung: "Einordnung",
+    ihrEinkommen: "Ihr Einkommen",
+    grundbetrag: "Grundbetrag",
+    familienzuschlag: "Familienzuschlag",
+    hoechstmiete: "Höchstmiete",
+    kindergeld: "Kindergeld",
+    arbeitsmittel: "Arbeitsmittel",
+    autoAngerechnet: "automatisch angerechnet",
+    proPerson: "/beruft. Person",
+    rechtsgrundlage: "Rechtsgrundlage",
+    stand: "Stand: Mai 2026 · Volt-Fraktion Karlsruhe",
+    darüber: "Darüber",
+    bis: "bis",
+    berechnungAnzeigen: "Berechnung anzeigen ▼",
+    berechnungAusblenden: "Berechnung ausblenden ▲",
+    anrechenbar: "Anrechenbar",
+    anrechenbaresEinkommen: "Anrechenbares Einkommen",
+    nichtBerufstaetig: "Nicht berufstätig",
+    arbeitsmittelpauschale: "Arbeitsmittelpauschale",
+    kindergeldAntragskind: "Kindergeld (Antragskind)",
+    kindergeldHinweis: "Kindergeld wird nur für das Antragskind (1× 255 €) angerechnet. Bei mehreren Kindern bitte für jedes Kind einzeln rechnen.",
+    detailEkg1: "Einkommen liegt unter der gesetzlichen Einkommensgrenze (EKG1).",
+    detailEkg3: "Einkommen überschreitet EKG1, liegt aber innerhalb der erweiterten Grenze für volle Übernahme (EKG3).",
+    detailEkg4: "Einkommen überschreitet EKG3, liegt aber innerhalb der Grenze für hälftige Übernahme (EKG4).",
+    detailNone: "Einkommen liegt über allen Einkommensgrenzen. Kein Zuschuss nach aktuellem Stand.",
+    detailSozial: "Bei Bezug von Bürgergeld, Wohngeld, Kinderzuschlag oder AsylbLG: automatisch 100 % Zuschuss.",
+  },
+  en: {
+    brand: "Volt Karlsruhe",
+    title: "Daycare Subsidy Calculator",
+    subtitle: "Preliminary check per § 90 SGB VIII · Income limits per §§ 85 ff. SGB XII incl. Karlsruhe extension (council decision 2021)",
+    disclaimer: "⚠️ Non-binding estimate – not an official decision. The actual calculation is carried out by the City of Karlsruhe.",
+    privacy: "🔒 Your data stays with you – all entries are calculated exclusively in your browser and are not stored or transmitted.",
+    schnellpruefung: "Quick check",
+    sozialleistungLabel: "Receiving Bürgergeld, housing benefit, child supplement, or AsylbLG benefits",
+    sozialleistungHint: "If yes: automatic 100% subsidy, no income check needed.",
+    haushalt: "Household",
+    personenImHaushalt: "People in household",
+    personenHint: "All people in the household (parents + children)",
+    alleinerziehend: "Single parent",
+    einkommen: "Income",
+    einkommenElternteil1: "Income parent 1",
+    einkommenElternteil2: "Income parent 2",
+    nettoLabel: "Monthly net income",
+    nettoHint: "Average of the last 6 months incl. holiday/Christmas bonus. Also: sick pay, parental allowance, pension.",
+    fahrtkostenLabel: "Commuting costs (monthly)",
+    fahrtkostenHint: "Public transport pass or by car: one-way distance in km × €0.05 × 2 × ~22 working days. Only fill in if employed.",
+    sonstigeLabel: "Other income",
+    sonstigeHint: "e.g. rental income, capital gains, BAföG, alimony received",
+    antragskindAbzuege: "Child & deductions",
+    kindesunterhaltLabel: "Child maintenance (received)",
+    kindesunterhaltHint: "Maintenance/advance for the child you are applying for",
+    versicherungLabel: "Insurance premiums (deduction)",
+    versicherungHint: "Monthly amount. For annual payments: amount ÷ 12. Contents, liability, accident insurance, union dues.",
+    besondereBelastungen: "Special expenses",
+    belastungenLabel: "Childcare fees for siblings / maintenance",
+    belastungenHint: "Monthly amount. Daycare, after-school fees for siblings + maintenance for children outside the household. NOT the costs of the child you're applying for.",
+    kitaBeitrag: "Daycare fee for this child",
+    kitaBeitragLabel: "Monthly parental fee",
+    kitaBeitragHint: "The fee to be covered",
+    ergebnis: "Estimated subsidy",
+    monatlicheLeistung: "Monthly benefit",
+    einordnung: "Breakdown",
+    ihrEinkommen: "Your income",
+    grundbetrag: "Base amount",
+    familienzuschlag: "Family supplement",
+    hoechstmiete: "Max. rent",
+    kindergeld: "Child benefit",
+    arbeitsmittel: "Work materials",
+    autoAngerechnet: "automatically counted",
+    proPerson: "/employed person",
+    rechtsgrundlage: "Legal basis",
+    stand: "As of: May 2026 · Volt Karlsruhe",
+    darüber: "Above",
+    bis: "up to",
+    berechnungAnzeigen: "Show calculation ▼",
+    berechnungAusblenden: "Hide calculation ▲",
+    anrechenbar: "Countable",
+    anrechenbaresEinkommen: "Assessable income",
+    nichtBerufstaetig: "Not employed",
+    arbeitsmittelpauschale: "Work materials deduction",
+    kindergeldAntragskind: "Child benefit (applicant child)",
+    kindergeldHinweis: "Child benefit is only counted for the child you are applying for (1× €255). For multiple children, please calculate separately for each child.",
+    detailEkg1: "Income is below the statutory income limit (EKG1).",
+    detailEkg3: "Income exceeds EKG1 but is within the extended limit for full coverage (EKG3).",
+    detailEkg4: "Income exceeds EKG3 but is within the limit for 50% coverage (EKG4).",
+    detailNone: "Income exceeds all income limits. No subsidy under current rules.",
+    detailSozial: "When receiving Bürgergeld, housing benefit, child supplement or AsylbLG: automatic 100% subsidy.",
+  },
+  tr: {
+    brand: "Volt Karlsruhe",
+    title: "Kreş Yardımı Hesaplayıcı",
+    subtitle: "§ 90 SGB VIII kapsamında ön kontrol · Karlsruhe belediye meclisi kararı (2021) dahil gelir sınırları",
+    disclaimer: "⚠️ Bağlayıcı olmayan ön bilgi – resmi karar değildir. Hesaplama Karlsruhe Şehir İdaresi tarafından yapılır.",
+    privacy: "🔒 Verileriniz sizde kalır – tüm girişler yalnızca tarayıcınızda hesaplanır, kaydedilmez veya iletilmez.",
+    schnellpruefung: "Hızlı kontrol",
+    sozialleistungLabel: "Bürgergeld, konut yardımı, çocuk ek ödeneği veya AsylbLG yardımı alıyor musunuz?",
+    sozialleistungHint: "Evetse: otomatik %100 yardım, gelir kontrolü gerekmez.",
+    haushalt: "Hane",
+    personenImHaushalt: "Hanedeki kişi sayısı",
+    personenHint: "Hanedeki tüm kişiler (ebeveynler + çocuklar)",
+    alleinerziehend: "Tek ebeveyn",
+    einkommen: "Gelir",
+    einkommenElternteil1: "1. ebeveyn geliri",
+    einkommenElternteil2: "2. ebeveyn geliri",
+    nettoLabel: "Aylık net gelir",
+    nettoHint: "Son 6 ayın ortalaması (tatil/Noel ikramiyesi dahil). Ayrıca: hastalık parası, ebeveyn ödeneği, emekli maaşı.",
+    fahrtkostenLabel: "Ulaşım masrafları (aylık)",
+    fahrtkostenHint: "Toplu taşıma aylık bileti veya araçla: tek yön km × 0,05 € × 2 × ~22 iş günü. Yalnızca çalışıyorsanız doldurun.",
+    sonstigeLabel: "Diğer gelirler",
+    sonstigeHint: "Örn. kira geliri, sermaye kazancı, BAföG, nafaka",
+    antragskindAbzuege: "Başvurulan çocuk ve kesintiler",
+    kindesunterhaltLabel: "Çocuk nafakası (alınan)",
+    kindesunterhaltHint: "Başvurduğunuz çocuk için alınan nafaka/nafaka avansı",
+    versicherungLabel: "Sigorta primleri (kesinti)",
+    versicherungHint: "Aylık tutar. Yıllık ödemelerde: tutar ÷ 12. Ev eşyası, sorumluluk, kaza sigortası, sendika aidatı.",
+    besondereBelastungen: "Özel yükümlülükler",
+    belastungenLabel: "Diğer çocukların bakım ücretleri / nafaka",
+    belastungenHint: "Aylık tutar. Kardeşlerin kreş, yurt, okul bakım ücretleri + hane dışındaki çocuklara ödenen nafaka. Başvurulan çocuğun masrafları DEĞİL.",
+    kitaBeitrag: "Başvurulan çocuğun kreş ücreti",
+    kitaBeitragLabel: "Aylık ebeveyn katkı payı",
+    kitaBeitragHint: "Karşılanması istenen ücret",
+    ergebnis: "Tahmini yardım",
+    monatlicheLeistung: "Aylık ödeme",
+    einordnung: "Değerlendirme",
+    ihrEinkommen: "Geliriniz",
+    grundbetrag: "Temel tutar",
+    familienzuschlag: "Aile ek ödeneği",
+    hoechstmiete: "Azami kira",
+    kindergeld: "Çocuk parası",
+    arbeitsmittel: "İş malzemeleri",
+    autoAngerechnet: "otomatik dahil",
+    proPerson: "/çalışan kişi",
+    rechtsgrundlage: "Hukuki dayanak",
+    stand: "Durum: Mayıs 2026 · Volt Karlsruhe",
+    darüber: "Üstü",
+    bis: "kadar",
+    berechnungAnzeigen: "Hesaplamayı göster ▼",
+    berechnungAusblenden: "Hesaplamayı gizle ▲",
+    anrechenbar: "Sayılan",
+    anrechenbaresEinkommen: "Sayılan gelir",
+    nichtBerufstaetig: "Çalışmıyor",
+    arbeitsmittelpauschale: "İş malzemesi kesintisi",
+    kindergeldAntragskind: "Çocuk parası (başvurulan çocuk)",
+    kindergeldHinweis: "Çocuk parası yalnızca başvurulan çocuk için (1× 255 €) hesaplanır. Birden fazla çocuk için lütfen her çocuk için ayrı hesaplayın.",
+    detailEkg1: "Gelir yasal gelir sınırının (EKG1) altında.",
+    detailEkg3: "Gelir EKG1'i aşıyor ancak tam karşılama sınırı (EKG3) dahilinde.",
+    detailEkg4: "Gelir EKG3'ü aşıyor ancak %50 karşılama sınırı (EKG4) dahilinde.",
+    detailNone: "Gelir tüm sınırları aşıyor. Mevcut durumda yardım yok.",
+    detailSozial: "Bürgergeld, konut yardımı, çocuk ek ödeneği veya AsylbLG alındığında: otomatik %100 yardım.",
+  },
+  uk: {
+    brand: "Volt Karlsruhe",
+    title: "Калькулятор субсидії на дитсадок",
+    subtitle: "Попередня перевірка згідно § 90 SGB VIII · Межі доходу згідно §§ 85 SGB XII вкл. розширення м. Карлсруе (рішення міськради 2021)",
+    disclaimer: "⚠️ Орієнтовний розрахунок – не офіційне рішення. Фактичний розрахунок здійснює міська адміністрація Карлсруе.",
+    privacy: "🔒 Ваші дані залишаються у вас – усі введені дані обчислюються виключно у вашому браузері і не зберігаються та не передаються.",
+    schnellpruefung: "Швидка перевірка",
+    sozialleistungLabel: "Отримуєте Bürgergeld, житлову допомогу, дитячу надбавку або допомогу за AsylbLG?",
+    sozialleistungHint: "Якщо так: автоматично 100% субсидії, перевірка доходу не потрібна.",
+    haushalt: "Домогосподарство",
+    personenImHaushalt: "Осіб у домогосподарстві",
+    personenHint: "Усі особи (батьки + діти)",
+    alleinerziehend: "Самотній батько/мати",
+    einkommen: "Дохід",
+    einkommenElternteil1: "Дохід батька/матері 1",
+    einkommenElternteil2: "Дохід батька/матері 2",
+    nettoLabel: "Щомісячний чистий дохід",
+    nettoHint: "Середнє за останні 6 місяців вкл. відпускні/різдвяні. Також: лікарняні, батьківська допомога, пенсія.",
+    fahrtkostenLabel: "Транспортні витрати (щомісяця)",
+    fahrtkostenHint: "Місячний проїзний або авто: відстань в км × 0,05 € × 2 × ~22 робочі дні. Лише для працюючих.",
+    sonstigeLabel: "Інші доходи",
+    sonstigeHint: "Напр. орендний дохід, доходи з капіталу, BAföG, аліменти",
+    antragskindAbzuege: "Дитина та відрахування",
+    kindesunterhaltLabel: "Аліменти на дитину (отримані)",
+    kindesunterhaltHint: "Аліменти/аванс на дитину, на яку подається заява",
+    versicherungLabel: "Страхові внески (відрахування)",
+    versicherungHint: "Місячна сума. При річних платежах: сума ÷ 12. Страхування майна, відповідальності, від нещасних випадків.",
+    besondereBelastungen: "Особливі витрати",
+    belastungenLabel: "Плата за догляд за іншими дітьми / аліменти",
+    belastungenHint: "Місячна сума. Оплата дитсадка для братів/сестер + аліменти на дітей поза домогосподарством. НЕ витрати на дитину-заявника.",
+    kitaBeitrag: "Плата за дитсадок дитини-заявника",
+    kitaBeitragLabel: "Щомісячний батьківський внесок",
+    kitaBeitragHint: "Сума, яку потрібно покрити",
+    ergebnis: "Очікувана субсидія",
+    monatlicheLeistung: "Щомісячна виплата",
+    einordnung: "Розподіл",
+    ihrEinkommen: "Ваш дохід",
+    grundbetrag: "Базова сума",
+    familienzuschlag: "Сімейна надбавка",
+    hoechstmiete: "Макс. оренда",
+    kindergeld: "Допомога на дітей",
+    arbeitsmittel: "Робочі матеріали",
+    autoAngerechnet: "автоматично враховано",
+    proPerson: "/працюючу особу",
+    rechtsgrundlage: "Правова основа",
+    stand: "Станом на: травень 2026 · Volt Karlsruhe",
+    darüber: "Вище",
+    bis: "до",
+    berechnungAnzeigen: "Показати розрахунок ▼",
+    berechnungAusblenden: "Сховати розрахунок ▲",
+    anrechenbar: "Зараховано",
+    anrechenbaresEinkommen: "Зарахований дохід",
+    nichtBerufstaetig: "Не працює",
+    arbeitsmittelpauschale: "Відрахування на робочі матеріали",
+    kindergeldAntragskind: "Допомога на дитину (дитина-заявник)",
+    kindergeldHinweis: "Допомога на дитину враховується лише для дитини-заявника (1× 255 €). При кількох дітях розраховуйте окремо для кожної дитини.",
+    detailEkg1: "Дохід нижче законодавчої межі (EKG1).",
+    detailEkg3: "Дохід перевищує EKG1, але в межах розширеної межі для повного покриття (EKG3).",
+    detailEkg4: "Дохід перевищує EKG3, але в межах межі для 50% покриття (EKG4).",
+    detailNone: "Дохід перевищує всі межі. Субсидія не передбачена.",
+    detailSozial: "При отриманні Bürgergeld, житлової допомоги, дитячої надбавки або AsylbLG: автоматично 100% субсидії.",
+  },
+  ar: {
+    brand: "Volt Karlsruhe",
+    title: "حاسبة دعم رسوم الحضانة",
+    subtitle: "فحص أولي وفقاً للمادة 90 SGB VIII · حدود الدخل وفقاً للمواد 85 SGB XII بما في ذلك توسيع مدينة كارلسروه (قرار المجلس البلدي 2021)",
+    disclaimer: "⚠️ معلومات إرشادية غير ملزمة – ليست قراراً رسمياً. يتم الحساب الفعلي من قبل إدارة مدينة كارلسروه.",
+    privacy: "🔒 بياناتكم تبقى لديكم – يتم حساب جميع المدخلات حصرياً في متصفحكم ولا يتم تخزينها أو نقلها.",
+    schnellpruefung: "فحص سريع",
+    sozialleistungLabel: "هل تتلقى إعانة المواطن أو بدل السكن أو علاوة الأطفال أو مزايا AsylbLG؟",
+    sozialleistungHint: "إذا نعم: دعم تلقائي 100٪، لا حاجة لفحص الدخل.",
+    haushalt: "الأسرة",
+    personenImHaushalt: "عدد أفراد الأسرة",
+    personenHint: "جميع الأشخاص في المنزل (الوالدان + الأطفال)",
+    alleinerziehend: "أحد الوالدين فقط",
+    einkommen: "الدخل",
+    einkommenElternteil1: "دخل الوالد/ة 1",
+    einkommenElternteil2: "دخل الوالد/ة 2",
+    nettoLabel: "صافي الدخل الشهري",
+    nettoHint: "متوسط آخر 6 أشهر شاملاً مكافآت الإجازة/عيد الميلاد. أيضاً: إعانة المرض، بدل الوالدية، المعاش.",
+    fahrtkostenLabel: "تكاليف التنقل (شهرياً)",
+    fahrtkostenHint: "اشتراك النقل العام أو بالسيارة: المسافة بالكم × 0.05 يورو × 2 × ~22 يوم عمل. فقط إذا كنت تعمل.",
+    sonstigeLabel: "دخل آخر",
+    sonstigeHint: "مثلاً: دخل الإيجار، عوائد رأس المال، BAföG، نفقة مستلمة",
+    antragskindAbzuege: "الطفل المتقدَّم له والخصومات",
+    kindesunterhaltLabel: "نفقة الطفل (مستلمة)",
+    kindesunterhaltHint: "النفقة/سلفة النفقة للطفل المتقدَّم له",
+    versicherungLabel: "أقساط التأمين (خصم)",
+    versicherungHint: "المبلغ الشهري. للمدفوعات السنوية: المبلغ ÷ 12. تأمين المنزل، المسؤولية، الحوادث، رسوم النقابة.",
+    besondereBelastungen: "أعباء خاصة",
+    belastungenLabel: "رسوم رعاية الأطفال الآخرين / نفقة",
+    belastungenHint: "المبلغ الشهري. رسوم الحضانة للأشقاء + نفقة لأطفال خارج الأسرة. ليس تكاليف الطفل المتقدَّم له.",
+    kitaBeitrag: "رسوم حضانة الطفل المتقدَّم له",
+    kitaBeitragLabel: "الرسوم الشهرية للوالدين",
+    kitaBeitragHint: "الرسوم المراد تغطيتها",
+    ergebnis: "الدعم المتوقع",
+    monatlicheLeistung: "المبلغ الشهري",
+    einordnung: "التصنيف",
+    ihrEinkommen: "دخلكم",
+    grundbetrag: "المبلغ الأساسي",
+    familienzuschlag: "علاوة الأسرة",
+    hoechstmiete: "الحد الأقصى للإيجار",
+    kindergeld: "إعانة الأطفال",
+    arbeitsmittel: "مستلزمات العمل",
+    autoAngerechnet: "محتسب تلقائياً",
+    proPerson: "/شخص عامل",
+    rechtsgrundlage: "الأساس القانوني",
+    stand: "الحالة: مايو 2026 · Volt Karlsruhe",
+    darüber: "أعلى",
+    bis: "حتى",
+    berechnungAnzeigen: "▼ عرض الحساب",
+    berechnungAusblenden: "▲ إخفاء الحساب",
+    anrechenbar: "المحتسب",
+    anrechenbaresEinkommen: "الدخل المحتسب",
+    nichtBerufstaetig: "غير عامل/ة",
+    arbeitsmittelpauschale: "خصم مستلزمات العمل",
+    kindergeldAntragskind: "إعانة الطفل (الطفل المتقدَّم له)",
+    kindergeldHinweis: "يتم احتساب إعانة الطفل فقط للطفل المتقدَّم له (1× 255 يورو). في حالة وجود عدة أطفال، يرجى الحساب لكل طفل على حدة.",
+    detailEkg1: "الدخل أقل من حد الدخل القانوني (EKG1).",
+    detailEkg3: "الدخل يتجاوز EKG1 لكنه ضمن الحد الموسع للتغطية الكاملة (EKG3).",
+    detailEkg4: "الدخل يتجاوز EKG3 لكنه ضمن حد التغطية بنسبة 50٪ (EKG4).",
+    detailNone: "الدخل يتجاوز جميع حدود الدخل. لا يوجد دعم وفقاً للقواعد الحالية.",
+    detailSozial: "عند تلقي إعانة المواطن أو بدل السكن أو علاوة الأطفال أو AsylbLG: دعم تلقائي 100٪.",
+  },
+};
+
+// ─── CALCULATION ─────────────────────────────────────────────
+function berechne(input, lang) {
+  const t = T[lang];
+  const {
+    haushaltGroesse, isAlleinerziehend,
+    nettoE1, fahrtkostenE1, sonstigeE1,
+    nettoE2, fahrtkostenE2, sonstigeE2,
+    kindesunterhalt, versicherungAbzug, besondereBelastungen,
+    kitaBeitrag, beziehtSozialleistung,
+  } = input;
+
+  if (beziehtSozialleistung) {
+    return { einkommen: null, ekg1: null, ekg3: null, ekg4: null, pct: 100, leistung: kitaBeitrag, stufe: "sozial", details: t.detailSozial };
+  }
+
+  const abzugE1 = ((nettoE1 || 0) > 0) ? ARBEITSMITTEL_PAUSCHALE + (fahrtkostenE1 || 0) : 0;
+  const abzugE2 = (!isAlleinerziehend && (nettoE2 || 0) > 0) ? ARBEITSMITTEL_PAUSCHALE + (fahrtkostenE2 || 0) : 0;
+
+  const e1 = Math.max(0, (nettoE1 || 0) - abzugE1) + (sonstigeE1 || 0);
+  const e2 = isAlleinerziehend ? 0 : Math.max(0, (nettoE2 || 0) - abzugE2) + (sonstigeE2 || 0);
+  const ek = KINDERGELD + (kindesunterhalt || 0);
+  const gesamt = e1 + e2 + ek - (versicherungAbzug || 0);
+
+  const sz = Math.min(Math.max(haushaltGroesse, 1), 6);
+  const ekg1 = GRUNDBETRAG + (haushaltGroesse - 1) * FAMILIENZUSCHLAG + (HOECHSTMIETE[sz] || HOECHSTMIETE[6]);
+  const ekg3 = ekg1 * EKG_FAKTOR_VOLL + (besondereBelastungen || 0);
+  const ekg4 = ekg1 * EKG_FAKTOR_HALB + (besondereBelastungen || 0);
+
+  let pct, stufe, details;
+  if (gesamt <= ekg1) { pct = 100; stufe = "EKG1"; details = t.detailEkg1; }
+  else if (gesamt <= ekg3) { pct = 100; stufe = "EKG3"; details = t.detailEkg3; }
+  else if (gesamt <= ekg4) { pct = 50; stufe = "EKG4"; details = t.detailEkg4; }
+  else { pct = 0; stufe = "none"; details = t.detailNone; }
+
+  const r = (v) => Math.round(v * 100) / 100;
+  return { einkommen: r(gesamt), ekg1: r(ekg1), ekg3: r(ekg3), ekg4: r(ekg4), pct, leistung: r(kitaBeitrag * pct / 100), stufe, details };
+}
+
+// ─── UI COMPONENTS ───────────────────────────────────────────
+function NumField({ label, value, onChange, hint }) {
+  return (
+    <div className="mb-3.5">
+      <label className="block text-sm font-semibold text-slate-700 mb-1">{label}</label>
+      {hint && <p className="text-[11px] text-slate-400 mb-1.5 leading-snug">{hint}</p>}
+      <div className="flex items-center gap-2">
+        <input type="number" min="0" step="0.01" value={value === 0 ? "" : value} placeholder="0"
+          onChange={(e) => onChange(e.target.value === "" ? 0 : parseFloat(e.target.value) || 0)}
+          className="w-full max-w-[200px] px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-mono outline-none transition-colors"
+          style={{ backgroundColor: INPUT_BG }}
+          onFocus={e => { e.target.style.borderColor = VOLT_FOCUS; e.target.style.boxShadow = `0 0 0 1px ${VOLT_FOCUS}33`; }}
+          onBlur={e => { e.target.style.borderColor = "#cbd5e1"; e.target.style.boxShadow = "none"; }} />
+        <span className="text-xs text-slate-400 font-medium">€</span>
+      </div>
+    </div>
+  );
+}
+
+function Toggle({ label, checked, onChange, hint }) {
+  return (
+    <div className="mb-3.5">
+      <label className="flex items-center gap-3 cursor-pointer select-none">
+        <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
+          className="relative w-12 h-7 rounded-full flex-shrink-0 transition-colors duration-200"
+          style={{ backgroundColor: checked ? VOLT : "#cbd5e1" }}>
+          <span className={`absolute top-[3px] w-[22px] h-[22px] rounded-full bg-white shadow-sm transition-[left] duration-200 ${checked ? "left-[24px]" : "left-[3px]"}`} />
+        </button>
+        <span className="text-sm font-semibold text-slate-700">{label}</span>
+      </label>
+      {hint && <p className="text-[11px] text-slate-400 mt-1 leading-snug ms-[60px]">{hint}</p>}
+    </div>
+  );
+}
+
+function Section({ title, children, accentColor = VOLT }) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-1 h-4 rounded-sm" style={{ backgroundColor: accentColor }} />
+        <h3 className="text-[11px] font-bold uppercase tracking-[1.5px] text-slate-500">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+
+// ─── MAIN ────────────────────────────────────────────────────
+function KitaZuschussRechner() {
+  const [lang, setLang] = useState("de");
+  const t = T[lang];
+  const dir = LANGS.find(l => l.code === lang)?.dir || "ltr";
+
+  const [haushaltGroesse, setHaushaltGroesse] = useState(4);
+  const [isAlleinerziehend, setAlleinerziehend] = useState(false);
+  const [nettoE1, setNettoE1] = useState(0);
+  const [fahrtkostenE1, setFahrtkostenE1] = useState(0);
+  const [sonstigeE1, setSonstigeE1] = useState(0);
+  const [nettoE2, setNettoE2] = useState(0);
+  const [fahrtkostenE2, setFahrtkostenE2] = useState(0);
+  const [sonstigeE2, setSonstigeE2] = useState(0);
+  const [kindesunterhalt, setKindesunterhalt] = useState(0);
+  const [versicherungAbzug, setVersicherung] = useState(0);
+  const [besondereBelastungen, setBelastungen] = useState(0);
+  const [kitaBeitrag, setKitaBeitrag] = useState(0);
+  const [beziehtSozialleistung, setSozial] = useState(false);
+  const [showBreakdown, setShowBreakdown] = useState(false);
+
+  const r = useMemo(() => berechne({
+    haushaltGroesse, isAlleinerziehend,
+    nettoE1, fahrtkostenE1, sonstigeE1,
+    nettoE2, fahrtkostenE2, sonstigeE2,
+    kindesunterhalt, versicherungAbzug, besondereBelastungen,
+    kitaBeitrag, beziehtSozialleistung,
+  }, lang), [haushaltGroesse, isAlleinerziehend, nettoE1, fahrtkostenE1, sonstigeE1,
+    nettoE2, fahrtkostenE2, sonstigeE2, kindesunterhalt, versicherungAbzug,
+    besondereBelastungen, kitaBeitrag, beziehtSozialleistung, lang]);
+
+  const pctColor = r.pct === 100 ? "#16a34a" : r.pct === 50 ? "#d97706" : "#dc2626";
+
+  return (
+    <div dir={dir} className="max-w-xl mx-auto px-4 py-4 font-sans text-slate-800">
+      {/* Header with language picker top-right */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl font-bold text-slate-900 leading-tight">{t.title}</h1>
+          <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">{t.subtitle}</p>
+        </div>
+        <div className="flex gap-1 ms-3 flex-shrink-0 flex-wrap justify-end" style={{ maxWidth: 120 }}>
+          {LANGS.map(l => (
+            <button key={l.code} onClick={() => setLang(l.code)}
+              className="px-2 py-1 rounded text-[10px] font-bold transition-colors"
+              style={{ backgroundColor: lang === l.code ? VOLT : LANG_BG, color: lang === l.code ? "white" : "#94a3b8" }}>
+              {l.code.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Disclaimer (compact) */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-5 text-[11px] text-amber-700 leading-snug">{t.disclaimer}</div>
+
+      {/* Schnellprüfung */}
+      <Section title={t.schnellpruefung} accentColor="#16a34a">
+        <Toggle label={t.sozialleistungLabel} checked={beziehtSozialleistung} onChange={setSozial} hint={t.sozialleistungHint} />
+      </Section>
+
+      {!beziehtSozialleistung && (
+        <>
+          <Section title={t.haushalt}>
+            <div className="mb-3.5">
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t.personenImHaushalt}</label>
+              <div className="flex gap-2 flex-wrap">
+                {[2, 3, 4, 5, 6, 7, 8].map(n => (
+                  <button key={n} onClick={() => setHaushaltGroesse(n)}
+                    className="w-12 h-12 rounded-lg font-mono font-bold text-base transition-all"
+                    style={{
+                      backgroundColor: haushaltGroesse === n ? VOLT_LIGHT : INPUT_BG,
+                      border: haushaltGroesse === n ? `2px solid ${VOLT}` : "1px solid #cbd5e1",
+                      color: haushaltGroesse === n ? VOLT : "#94a3b8"
+                    }}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">{t.personenHint}</p>
+            </div>
+            <Toggle label={t.alleinerziehend} checked={isAlleinerziehend}
+              onChange={v => { setAlleinerziehend(v); if (v) { setNettoE2(0); setFahrtkostenE2(0); setSonstigeE2(0); } }} />
+          </Section>
+
+          <Section title={isAlleinerziehend ? t.einkommen : t.einkommenElternteil1}>
+            <NumField label={t.nettoLabel} value={nettoE1} onChange={setNettoE1} hint={t.nettoHint} />
+            <NumField label={t.fahrtkostenLabel} value={fahrtkostenE1} onChange={setFahrtkostenE1} hint={t.fahrtkostenHint} />
+            <NumField label={t.sonstigeLabel} value={sonstigeE1} onChange={setSonstigeE1} hint={t.sonstigeHint} />
+          </Section>
+
+          {!isAlleinerziehend && (
+            <Section title={t.einkommenElternteil2}>
+              <NumField label={t.nettoLabel} value={nettoE2} onChange={setNettoE2} hint={t.nettoHint} />
+              <NumField label={t.fahrtkostenLabel} value={fahrtkostenE2} onChange={setFahrtkostenE2} hint={t.fahrtkostenHint} />
+              <NumField label={t.sonstigeLabel} value={sonstigeE2} onChange={setSonstigeE2} hint={t.sonstigeHint} />
+            </Section>
+          )}
+
+          <Section title={t.antragskindAbzuege}>
+            <NumField label={t.kindesunterhaltLabel} value={kindesunterhalt} onChange={setKindesunterhalt} hint={t.kindesunterhaltHint} />
+            <NumField label={t.versicherungLabel} value={versicherungAbzug} onChange={setVersicherung} hint={t.versicherungHint} />
+          </Section>
+
+          <Section title={t.besondereBelastungen} accentColor="#f59e0b">
+            <NumField label={t.belastungenLabel} value={besondereBelastungen} onChange={setBelastungen} hint={t.belastungenHint} />
+          </Section>
+        </>
+      )}
+
+      <Section title={t.kitaBeitrag} accentColor="#16a34a">
+        <NumField label={t.kitaBeitragLabel} value={kitaBeitrag} onChange={setKitaBeitrag} hint={t.kitaBeitragHint} />
+      </Section>
+
+      {/* ═══ RESULT ═══ */}
+      {(() => {
+        const resultBg = r.pct === 100 ? "#f0fdf4" : r.pct === 50 ? "#fffbeb" : "#fef2f2";
+        const resultBorder = r.pct === 100 ? "#dcfce7" : r.pct === 50 ? "#fef3c7" : "#fee2e2";
+        const scaleMax = r.ekg4 ? Math.max(r.ekg4, r.einkommen || 0) * 1.15 : 1;
+        const pos = v => Math.min((v / scaleMax) * 100, 100);
+        const eur = v => v.toLocaleString("de-DE", { maximumFractionDigits: 0 });
+
+        return (
+          <div className="rounded-2xl mt-2 overflow-hidden" style={{ backgroundColor: resultBg, border: `1px solid ${resultBorder}` }}>
+            <div className="px-5 py-5">
+              {/* Percentage */}
+              <div className="text-center mb-3">
+                <p className="text-[10px] uppercase tracking-[2px] text-slate-400 mb-1.5">{t.ergebnis}</p>
+                <p className="text-5xl font-bold font-mono leading-none" style={{ color: pctColor }}>
+                  {r.pct} %
+                </p>
+                {r.leistung > 0 && (
+                  <p className="text-2xl font-bold font-mono text-slate-800 mt-2">
+                    {r.leistung.toLocaleString("de-DE", { minimumFractionDigits: 2 })} € <span className="text-sm font-normal text-slate-400">/ {t.monatlicheLeistung.charAt(0).toLowerCase() + t.monatlicheLeistung.slice(1)}</span>
+                  </p>
+                )}
+                <p className="text-xs text-slate-500 mt-2 leading-snug max-w-sm mx-auto">{r.details}</p>
+              </div>
+
+              {/* ═══ CALCULATION BREAKDOWN (collapsible) ═══ */}
+              {!beziehtSozialleistung && r.einkommen !== null && (() => {
+                const abz1 = (nettoE1 || 0) > 0 ? ARBEITSMITTEL_PAUSCHALE : 0;
+                const abz2 = (!isAlleinerziehend && (nettoE2 || 0) > 0) ? ARBEITSMITTEL_PAUSCHALE : 0;
+                const anr1 = Math.max(0, (nettoE1 || 0) - abz1 - (fahrtkostenE1 || 0)) + (sonstigeE1 || 0);
+                const anr2 = isAlleinerziehend ? 0 : Math.max(0, (nettoE2 || 0) - abz2 - (fahrtkostenE2 || 0)) + (sonstigeE2 || 0);
+                const eurFmt = v => Math.abs(v).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const Row = ({ label, val, sign, muted }) => (
+                  <div className={`flex justify-between text-[12px] py-0.5 ${muted ? "text-slate-300 italic" : "text-slate-500"}`}>
+                    <span>{label}</span>
+                    <span className="font-mono">{muted ? "—" : `${sign} ${eurFmt(val)} €`}</span>
+                  </div>
+                );
+                const Sub = ({ label, val }) => (
+                  <div className="flex justify-between text-[12px] font-bold text-slate-600 pt-1.5 mt-1 border-t border-slate-100">
+                    <span>{label}</span><span className="font-mono">{eurFmt(val)} €</span>
+                  </div>
+                );
+                return (
+                  <div className="mt-3">
+                    <button onClick={() => setShowBreakdown(!showBreakdown)}
+                      className="w-full text-center text-xs font-semibold py-2 rounded-lg transition-colors"
+                      style={{ color: VOLT, backgroundColor: showBreakdown ? VOLT_LIGHT : "transparent" }}>
+                      {showBreakdown ? t.berechnungAusblenden : t.berechnungAnzeigen}
+                    </button>
+                    {showBreakdown && (
+                      <div className="mt-2 rounded-xl bg-white border border-slate-100 overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+                        <div className="px-4 py-3">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                            {isAlleinerziehend ? t.einkommen : t.einkommenElternteil1}
+                          </p>
+                          {(nettoE1 || 0) > 0 ? (<>
+                            <Row label={t.nettoLabel} val={nettoE1} sign="" />
+                            <Row label={t.arbeitsmittelpauschale} val={ARBEITSMITTEL_PAUSCHALE} sign="−" />
+                            <Row label={t.fahrtkostenLabel} val={fahrtkostenE1 || 0} sign="−" />
+                            <Row label={t.sonstigeLabel} val={sonstigeE1 || 0} sign="+" />
+                          </>) : <Row label={t.nichtBerufstaetig} val={0} sign="" muted />}
+                          <Sub label={`${t.anrechenbar} ${isAlleinerziehend ? "" : "E1"}`} val={anr1} />
+
+                          {!isAlleinerziehend && (<>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-3 mb-1.5">{t.einkommenElternteil2}</p>
+                            {(nettoE2 || 0) > 0 ? (<>
+                              <Row label={t.nettoLabel} val={nettoE2} sign="" />
+                              <Row label={t.arbeitsmittelpauschale} val={ARBEITSMITTEL_PAUSCHALE} sign="−" />
+                              <Row label={t.fahrtkostenLabel} val={fahrtkostenE2 || 0} sign="−" />
+                              <Row label={t.sonstigeLabel} val={sonstigeE2 || 0} sign="+" />
+                            </>) : <Row label={t.nichtBerufstaetig} val={0} sign="" muted />}
+                            <Sub label={`${t.anrechenbar} E2`} val={anr2} />
+                          </>)}
+
+                          <hr className="my-2.5 border-slate-100" />
+                          <Row label={t.kindergeldAntragskind} val={KINDERGELD} sign="+" />
+                          <Row label={t.kindesunterhaltLabel} val={kindesunterhalt || 0} sign="+" />
+                          <Row label={t.versicherungLabel} val={versicherungAbzug || 0} sign="−" />
+
+                          <div className="flex justify-between text-[13px] font-bold pt-2 mt-1.5 border-t-2 border-slate-200" style={{ color: VOLT }}>
+                            <span>{t.anrechenbaresEinkommen}</span>
+                            <span className="font-mono">{eurFmt(r.einkommen)} €</span>
+                          </div>
+                        </div>
+                        <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100">
+                          <p className="text-[10px] text-slate-400 leading-relaxed">ℹ️ {t.kindergeldHinweis}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Single bar + table (only for non-Sozialleistung) */}
+              {!beziehtSozialleistung && r.einkommen !== null && (
+                <div className="border-t pt-4 mt-3" style={{ borderColor: resultBorder }}>
+                  <p className="text-[10px] uppercase tracking-[2px] text-slate-400 mb-2">{t.einordnung}</p>
+
+                  {/* Zone bar */}
+                  <div dir="ltr" className="relative h-6 rounded-full overflow-visible">
+                    <div className="absolute inset-0 rounded-full overflow-hidden flex" style={{ backgroundColor: "#fee2e2" }}>
+                      <div className="h-full" style={{ width: `${pos(r.ekg1)}%`, backgroundColor: "#bbf7d0" }} />
+                      <div className="h-full" style={{ width: `${pos(r.ekg3) - pos(r.ekg1)}%`, backgroundColor: "#86efac" }} />
+                      <div className="h-full" style={{ width: `${pos(r.ekg4) - pos(r.ekg3)}%`, backgroundColor: "#fde68a" }} />
+                    </div>
+
+                    {/* Threshold ticks */}
+                    {[
+                      { p: pos(r.ekg1), c: "#16a34a" },
+                      { p: pos(r.ekg3), c: "#15803d" },
+                      { p: pos(r.ekg4), c: "#d97706" },
+                    ].map((tick, i) => (
+                      <div key={i} className="absolute top-0 bottom-0 w-px" style={{ left: `${tick.p}%`, backgroundColor: tick.c, opacity: 0.5 }} />
+                    ))}
+
+                    {/* Income marker: thin violet line */}
+                    <div className="absolute top-0 bottom-0 z-10"
+                      style={{ left: `${pos(r.einkommen)}%`, transform: "translateX(-50%)" }}>
+                      <div className="w-1 h-full" style={{ backgroundColor: "#502379" }} />
+                    </div>
+                  </div>
+
+                  {/* Income label below marker */}
+                  {(() => {
+                    const mp = pos(r.einkommen);
+                    const align = mp < 25 ? "start" : mp > 75 ? "end" : "center";
+                    const tx = mp < 25 ? "translateX(0)" : mp > 75 ? "translateX(-100%)" : "translateX(-50%)";
+                    return (
+                      <div dir="ltr" className="relative h-8 mt-1">
+                        <div className="absolute flex flex-col"
+                          style={{ left: `${mp}%`, transform: tx, alignItems: align === "start" ? "flex-start" : align === "end" ? "flex-end" : "center" }}>
+                          <span className="text-[10px] font-bold" style={{ color: VOLT, transform: align === "start" ? "translateX(0)" : align === "end" ? `translateX(0)` : "none" }}>▲</span>
+                          <span className="text-[10px] font-bold whitespace-nowrap" style={{ color: VOLT }}>{t.ihrEinkommen}: {eur(r.einkommen)} €</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* EKG table */}
+                  <div className="mt-2 rounded-lg overflow-hidden border border-slate-100">
+                    <table className="w-full text-[11px]">
+                      <tbody>
+                        {[
+                          { zone: "#bbf7d0", label: "EKG1", range: "100 %", val: r.ekg1, color: "#16a34a" },
+                          { zone: "#86efac", label: "EKG3", range: "100 %", val: r.ekg3, color: "#15803d" },
+                          { zone: "#fde68a", label: "EKG4", range: "50 %", val: r.ekg4, color: "#d97706" },
+                          { zone: "#fee2e2", label: t.darüber, range: "0 %", val: null, color: "#dc2626" },
+                        ].map((row, i) => (
+                          <tr key={i} className="border-b border-slate-50 last:border-0">
+                            <td className="py-1.5 px-2.5">
+                              <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: row.zone }} />
+                            </td>
+                            <td className="py-1.5 font-semibold" style={{ color: row.color }}>{row.label}</td>
+                            <td className="py-1.5 font-bold" style={{ color: row.color }}>{row.range}</td>
+                            <td className="py-1.5 px-2.5 text-end font-mono text-slate-400">
+                              {row.val ? `${t.bis} ${eur(row.val)} €` : ""}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+
+    // ─── RENDER ─────────────────────────────────────────────────
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(React.createElement(KitaZuschussRechner));
+  </script>
+</body>
+</html>

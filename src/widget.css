@@ -1,0 +1,32 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   This stylesheet is injected INTO the widget's Shadow DOM (see src/main.jsx),
+   not into the host page. Shadow encapsulation means Tailwind's utilities,
+   Preflight, and theme vars apply ONLY to the widget and can never collide with
+   the host page's own Tailwind (which is exactly what broke voltsite's sidebar
+   when this shipped as a global stylesheet). So we can use full Tailwind here.
+   ─────────────────────────────────────────────────────────────────────────── */
+@import "tailwindcss";
+
+/* Keep the sans var aligned with the host (voltsite ships Ubuntu); falls back
+   gracefully when the widget runs standalone. */
+@theme {
+  --font-sans: "Ubuntu", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Inside a shadow root, Preflight's `html { font-family: … }` rule can't match
+   (html lives outside this tree), so anchor the font + base line-height on the
+   shadow host element instead. */
+:host {
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+/* Number-input spinner removal (pseudo-elements can't be expressed inline). */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
