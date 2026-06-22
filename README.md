@@ -56,3 +56,8 @@ on `#kita-zuschuss-rechner-root`. Vite (`vite-plugin-singlefile`) inlines
 everything into `dist/index.html`; `build-droppable.mjs` strips that to a fragment
 (no `<!doctype>`/`<head>`/`<body>`, no global `<style>`) and fails the build if any
 global CSS would leak to the host.
+
+## License
+
+[BSD Zero Clause License](LICENSE) (0BSD) — public-domain-equivalent, no
+attribution required.

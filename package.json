@@ -10,7 +10,7 @@
   },
   "keywords": [],
   "author": "Johannes Bier",
-  "license": "ISC",
+  "license": "0BSD",
   "description": "",
   "dependencies": {
     "react": "^18.3.1",
