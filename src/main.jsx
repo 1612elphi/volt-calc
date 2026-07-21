@@ -41,8 +41,8 @@ const T = {
   de: {
     brand: "Volt Karlsruhe",
     title: "Kita-Zuschuss Rechner",
-    subtitle: "Vorab-Prüfung nach § 90 SGB VIII · Einkommensgrenzen gemäß §§ 85 ff. SGB XII inkl. Karlsruher Erweiterung (GR-Beschluss 2021)",
-    disclaimer: "⚠️ Unverbindliche Orientierung – kein Bescheid. Die tatsächliche Berechnung erfolgt durch die Wirtschaftliche Jugendhilfe der Stadt Karlsruhe.",
+    subtitle: "Prüfen Sie vorab, ob Ihnen ein Zuschuss zum Kita-Beitrag zusteht.",
+    disclaimer: "Unverbindliche Orientierung – kein Bescheid. Die verbindliche Berechnung erfolgt durch die Wirtschaftliche Jugendhilfe der Stadt Karlsruhe.",
     privacy: "🔒 Ihre Daten bleiben bei Ihnen – alle Eingaben werden ausschließlich in Ihrem Browser berechnet und nicht gespeichert oder übertragen.",
     schnellpruefung: "Schnellprüfung",
     sozialleistungLabel: "Bezug von Bürgergeld, Wohngeld, Kinderzuschlag oder AsylbLG",
@@ -84,7 +84,7 @@ const T = {
     autoAngerechnet: "automatisch angerechnet",
     proPerson: "/beruft. Person",
     rechtsgrundlage: "Rechtsgrundlage",
-    stand: "Stand: Mai 2026 · Volt-Fraktion Karlsruhe",
+    stand: "Stand: Juli 2026 · Volt-Fraktion Karlsruhe",
     darüber: "Darüber",
     bis: "bis",
     berechnungAnzeigen: "Berechnung anzeigen ▼",
@@ -95,8 +95,8 @@ const T = {
     arbeitsmittelpauschale: "Arbeitsmittelpauschale",
     kindergeldAntragskind: "Kindergeld (Antragskind)",
     kindergeldHinweis: `Kindergeld wird nur für das Antragskind (1× ${KINDERGELD} €) angerechnet. Bei mehreren Kindern bitte für jedes Kind einzeln rechnen.`,
-    nurKarlsruheTitel: "Nur für die Stadt Karlsruhe",
-    nurKarlsruheText: "Dieser Rechner gilt nur für die Stadt Karlsruhe. Der Landkreis Karlsruhe hat ein eigenes Verfahren mit anderen Regeln.",
+    nurKarlsruheTitel: "Nur für die Stadt Karlsruhe (ohne Durlach)",
+    nurKarlsruheText: "Der Landkreis Karlsruhe und Durlach haben ein eigenes Verfahren mit anderen Regeln.",
     ermessensHinweis: "Im tatsächlichen Antragsverfahren können weitere laufende Belastungen anerkannt werden (z.B. besondere Wohnkosten). Das tatsächliche Ergebnis kann daher zu Ihren Gunsten abweichen.",
     grenznaeheHinweis: "Ihr Ergebnis liegt nahe an der Grenze. Da im Antragsverfahren weitere Belastungen berücksichtigt werden können, empfehlen wir, dennoch einen Antrag zu stellen.",
     antragLink: "Zum Antrag der Stadt Karlsruhe",
@@ -110,8 +110,8 @@ const T = {
   en: {
     brand: "Volt Karlsruhe",
     title: "Daycare Subsidy Calculator",
-    subtitle: "Preliminary check per § 90 SGB VIII · Income limits per §§ 85 ff. SGB XII incl. Karlsruhe extension (council decision 2021)",
-    disclaimer: "⚠️ Non-binding estimate – not an official decision. The actual calculation is carried out by the City of Karlsruhe.",
+    subtitle: "Check in advance whether you qualify for a subsidy toward your daycare fee.",
+    disclaimer: "Non-binding estimate – not an official decision. The binding calculation is carried out by the City of Karlsruhe.",
     privacy: "🔒 Your data stays with you – all entries are calculated exclusively in your browser and are not stored or transmitted.",
     schnellpruefung: "Quick check",
     sozialleistungLabel: "Receiving Bürgergeld, housing benefit, child supplement, or AsylbLG benefits",
@@ -153,7 +153,7 @@ const T = {
     autoAngerechnet: "automatically counted",
     proPerson: "/employed person",
     rechtsgrundlage: "Legal basis",
-    stand: "As of: May 2026 · Volt Karlsruhe",
+    stand: "As of: July 2026 · Volt Karlsruhe",
     darüber: "Above",
     bis: "up to",
     berechnungAnzeigen: "Show calculation ▼",
@@ -164,8 +164,8 @@ const T = {
     arbeitsmittelpauschale: "Work materials deduction",
     kindergeldAntragskind: "Child benefit (applicant child)",
     kindergeldHinweis: `Child benefit is only counted for the child you are applying for (1× €${KINDERGELD}). For multiple children, please calculate separately for each child.`,
-    nurKarlsruheTitel: "City of Karlsruhe only",
-    nurKarlsruheText: "This calculator applies only to the City of Karlsruhe. The Karlsruhe district (Landkreis) has its own procedure with different rules.",
+    nurKarlsruheTitel: "City of Karlsruhe only (excluding Durlach)",
+    nurKarlsruheText: "The Karlsruhe district (Landkreis) and Durlach have their own procedure with different rules.",
     ermessensHinweis: "In the actual application process, further ongoing expenses may be recognised (e.g. exceptional housing costs). The actual result may therefore differ in your favour.",
     grenznaeheHinweis: "Your result is close to the threshold. Since further expenses can be taken into account during the application process, we recommend applying anyway.",
     antragLink: "To the City of Karlsruhe application",
@@ -179,8 +179,8 @@ const T = {
   tr: {
     brand: "Volt Karlsruhe",
     title: "Kreş Yardımı Hesaplayıcı",
-    subtitle: "§ 90 SGB VIII kapsamında ön kontrol · Karlsruhe belediye meclisi kararı (2021) dahil gelir sınırları",
-    disclaimer: "⚠️ Bağlayıcı olmayan ön bilgi – resmi karar değildir. Hesaplama Karlsruhe Şehir İdaresi tarafından yapılır.",
+    subtitle: "Kreş ücretine yönelik bir yardım hakkınız olup olmadığını önceden kontrol edin.",
+    disclaimer: "Bağlayıcı olmayan ön bilgi – resmi karar değildir. Bağlayıcı hesaplama Karlsruhe Şehir İdaresi tarafından yapılır.",
     privacy: "🔒 Verileriniz sizde kalır – tüm girişler yalnızca tarayıcınızda hesaplanır, kaydedilmez veya iletilmez.",
     schnellpruefung: "Hızlı kontrol",
     sozialleistungLabel: "Bürgergeld, konut yardımı, çocuk ek ödeneği veya AsylbLG yardımı alıyor musunuz?",
@@ -222,7 +222,7 @@ const T = {
     autoAngerechnet: "otomatik dahil",
     proPerson: "/çalışan kişi",
     rechtsgrundlage: "Hukuki dayanak",
-    stand: "Durum: Mayıs 2026 · Volt Karlsruhe",
+    stand: "Durum: Temmuz 2026 · Volt Karlsruhe",
     darüber: "Üstü",
     bis: "kadar",
     berechnungAnzeigen: "Hesaplamayı göster ▼",
@@ -233,8 +233,8 @@ const T = {
     arbeitsmittelpauschale: "İş malzemesi kesintisi",
     kindergeldAntragskind: "Çocuk parası (başvurulan çocuk)",
     kindergeldHinweis: `Çocuk parası yalnızca başvurulan çocuk için (1× ${KINDERGELD} €) hesaplanır. Birden fazla çocuk için lütfen her çocuk için ayrı hesaplayın.`,
-    nurKarlsruheTitel: "Yalnızca Karlsruhe şehri için",
-    nurKarlsruheText: "Bu hesaplayıcı yalnızca Karlsruhe şehri için geçerlidir. Karlsruhe ilçesinin (Landkreis) farklı kuralları olan kendi prosedürü vardır.",
+    nurKarlsruheTitel: "Yalnızca Karlsruhe şehri için (Durlach hariç)",
+    nurKarlsruheText: "Karlsruhe ilçesi (Landkreis) ve Durlach'ın farklı kurallara sahip kendi prosedürü vardır.",
     ermessensHinweis: "Gerçek başvuru sürecinde başka düzenli yükümlülükler de kabul edilebilir (örn. özel konut masrafları). Bu nedenle gerçek sonuç lehinize farklılık gösterebilir.",
     grenznaeheHinweis: "Sonucunuz sınıra yakın. Başvuru sürecinde başka yükümlülükler de dikkate alınabileceğinden, yine de başvuruda bulunmanızı öneririz.",
     antragLink: "Karlsruhe şehri başvurusuna git",
@@ -248,8 +248,8 @@ const T = {
   uk: {
     brand: "Volt Karlsruhe",
     title: "Калькулятор субсидії на дитсадок",
-    subtitle: "Попередня перевірка згідно § 90 SGB VIII · Межі доходу згідно §§ 85 SGB XII вкл. розширення м. Карлсруе (рішення міськради 2021)",
-    disclaimer: "⚠️ Орієнтовний розрахунок – не офіційне рішення. Фактичний розрахунок здійснює міська адміністрація Карлсруе.",
+    subtitle: "Перевірте заздалегідь, чи маєте ви право на субсидію до плати за дитсадок.",
+    disclaimer: "Орієнтовний розрахунок – не офіційне рішення. Обов'язковий розрахунок здійснює міська адміністрація Карлсруе.",
     privacy: "🔒 Ваші дані залишаються у вас – усі введені дані обчислюються виключно у вашому браузері і не зберігаються та не передаються.",
     schnellpruefung: "Швидка перевірка",
     sozialleistungLabel: "Отримуєте Bürgergeld, житлову допомогу, дитячу надбавку або допомогу за AsylbLG?",
@@ -291,7 +291,7 @@ const T = {
     autoAngerechnet: "автоматично враховано",
     proPerson: "/працюючу особу",
     rechtsgrundlage: "Правова основа",
-    stand: "Станом на: травень 2026 · Volt Karlsruhe",
+    stand: "Станом на: липень 2026 · Volt Karlsruhe",
     darüber: "Вище",
     bis: "до",
     berechnungAnzeigen: "Показати розрахунок ▼",
@@ -302,8 +302,8 @@ const T = {
     arbeitsmittelpauschale: "Відрахування на робочі матеріали",
     kindergeldAntragskind: "Допомога на дитину (дитина-заявник)",
     kindergeldHinweis: `Допомога на дитину враховується лише для дитини-заявника (1× ${KINDERGELD} €). При кількох дітях розраховуйте окремо для кожної дитини.`,
-    nurKarlsruheTitel: "Лише для міста Карлсруе",
-    nurKarlsruheText: "Цей калькулятор діє лише для міста Карлсруе. Район Карлсруе (Landkreis) має власну процедуру з іншими правилами.",
+    nurKarlsruheTitel: "Лише для міста Карлсруе (крім Дурлаха)",
+    nurKarlsruheText: "Район Карлсруе (Landkreis) і Дурлах мають власну процедуру з іншими правилами.",
     ermessensHinweis: "У фактичній процедурі подання заяви можуть бути визнані інші поточні витрати (напр. особливі витрати на житло). Тому фактичний результат може відрізнятися на вашу користь.",
     grenznaeheHinweis: "Ваш результат близький до межі. Оскільки під час розгляду заяви можуть враховуватися додаткові витрати, ми радимо все одно подати заяву.",
     antragLink: "До заяви міста Карлсруе",
@@ -317,8 +317,8 @@ const T = {
   ar: {
     brand: "Volt Karlsruhe",
     title: "حاسبة دعم رسوم الحضانة",
-    subtitle: "فحص أولي وفقاً للمادة 90 SGB VIII · حدود الدخل وفقاً للمواد 85 SGB XII بما في ذلك توسيع مدينة كارلسروه (قرار المجلس البلدي 2021)",
-    disclaimer: "⚠️ معلومات إرشادية غير ملزمة – ليست قراراً رسمياً. يتم الحساب الفعلي من قبل إدارة مدينة كارلسروه.",
+    subtitle: "تحقّقوا مسبقاً مما إذا كان يحق لكم دعم لرسوم الحضانة.",
+    disclaimer: "معلومات إرشادية غير ملزمة – ليست قراراً رسمياً. يتم الحساب المُلزِم من قبل إدارة مدينة كارلسروه.",
     privacy: "🔒 بياناتكم تبقى لديكم – يتم حساب جميع المدخلات حصرياً في متصفحكم ولا يتم تخزينها أو نقلها.",
     schnellpruefung: "فحص سريع",
     sozialleistungLabel: "هل تتلقى إعانة المواطن أو بدل السكن أو علاوة الأطفال أو مزايا AsylbLG؟",
@@ -360,7 +360,7 @@ const T = {
     autoAngerechnet: "محتسب تلقائياً",
     proPerson: "/شخص عامل",
     rechtsgrundlage: "الأساس القانوني",
-    stand: "الحالة: مايو 2026 · Volt Karlsruhe",
+    stand: "الحالة: يوليو 2026 · Volt Karlsruhe",
     darüber: "أعلى",
     bis: "حتى",
     berechnungAnzeigen: "▼ عرض الحساب",
@@ -371,8 +371,8 @@ const T = {
     arbeitsmittelpauschale: "خصم مستلزمات العمل",
     kindergeldAntragskind: "إعانة الطفل (الطفل المتقدَّم له)",
     kindergeldHinweis: `يتم احتساب إعانة الطفل فقط للطفل المتقدَّم له (1× ${KINDERGELD} يورو). في حالة وجود عدة أطفال، يرجى الحساب لكل طفل على حدة.`,
-    nurKarlsruheTitel: "لمدينة كارلسروه فقط",
-    nurKarlsruheText: "هذه الحاسبة تنطبق على مدينة كارلسروه فقط. لمقاطعة كارلسروه (Landkreis) إجراءات خاصة بها وقواعد مختلفة.",
+    nurKarlsruheTitel: "لمدينة كارلسروه فقط (باستثناء دورلاخ)",
+    nurKarlsruheText: "لمقاطعة كارلسروه (Landkreis) ودورلاخ إجراءات خاصة بها وبقواعد مختلفة.",
     ermessensHinweis: "في إجراءات التقديم الفعلية، يمكن الاعتراف بأعباء جارية إضافية (مثل تكاليف السكن الاستثنائية). لذلك قد تختلف النتيجة الفعلية لصالحكم.",
     grenznaeheHinweis: "نتيجتكم قريبة من الحد. وبما أنه يمكن مراعاة أعباء إضافية أثناء إجراءات التقديم، ننصح بتقديم الطلب على أي حال.",
     antragLink: "إلى طلب مدينة كارلسروه",
@@ -527,16 +527,17 @@ function KitaZuschussRechner() {
         </div>
       </div>
 
-      {/* Disclaimer (compact) */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 text-[11px] text-amber-700 leading-snug">{t.disclaimer}</div>
-
-      {/* Geltungsbereich. Bewusst blau statt rot/gelb: das ist eine Abgrenzung,
-          keine Warnung — auffällig, aber nicht alarmierend. */}
+      {/* Geltungsbereich + Unverbindlich-Hinweis in EINER Box, klar priorisiert:
+          zuerst der Geltungsbereich (die "bin ich hier richtig?"-Info), darunter
+          kleiner der Unverbindlich-Hinweis. Bewusst blau statt rot/gelb:
+          Abgrenzung, keine Warnung — auffällig, aber nicht alarmierend. */}
       <div className="bg-sky-50 border border-sky-200 rounded-lg px-3.5 py-2.5 mb-5 flex items-start gap-2.5">
         <span className="text-base leading-none mt-0.5 flex-shrink-0">📍</span>
         <div className="min-w-0">
           <p className="text-[12px] font-bold text-sky-900 leading-snug">{t.nurKarlsruheTitel}</p>
           <p className="text-[11px] text-sky-800 leading-snug mt-0.5">{t.nurKarlsruheText}</p>
+          <div className="border-t border-sky-200 my-1.5" />
+          <p className="text-[11px] text-sky-700 leading-snug">{t.disclaimer}</p>
         </div>
       </div>
 
