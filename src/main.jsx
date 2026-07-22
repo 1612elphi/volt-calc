@@ -19,10 +19,14 @@ const REGELBEDARFSSTUFE_1 = 563;
 const GRUNDBETRAG = REGELBEDARFSSTUFE_1 * 2;
 const FAMILIENZUSCHLAG = Math.ceil(REGELBEDARFSSTUFE_1 * 0.7);
 const ARBEITSMITTEL_PAUSCHALE = 5.20;
-const KINDERGELD = 255;
+const KINDERGELD = 259; // Erhöhung zum 01.01.2026 (zuvor 255 €)
 const HOECHSTMIETE = { 1: 613, 2: 743, 3: 884, 4: 1030, 5: 1178, 6: 1321 };
 const EKG_FAKTOR_VOLL = 1.2;
 const EKG_FAKTOR_HALB = 1.3;
+// Grenzfall-Empfehlung: bis 10 % über EKG4 raten wir trotzdem zum Antrag,
+// weil die Sachbearbeitung weitere Belastungen anerkennen kann.
+const GRENZNAEHE_TOLERANZ = 1.1;
+const ANTRAG_URL = "https://www.karlsruhe.de/kita-gebuehren";
 
 // ─── i18n ────────────────────────────────────────────────────
 const LANGS = [
@@ -37,8 +41,8 @@ const T = {
   de: {
     brand: "Volt Karlsruhe",
     title: "Kita-Zuschuss Rechner",
-    subtitle: "Vorab-Prüfung nach § 90 SGB VIII · Einkommensgrenzen gemäß §§ 85 ff. SGB XII inkl. Karlsruher Erweiterung (GR-Beschluss 2021)",
-    disclaimer: "⚠️ Unverbindliche Orientierung – kein Bescheid. Die tatsächliche Berechnung erfolgt durch die Wirtschaftliche Jugendhilfe der Stadt Karlsruhe.",
+    subtitle: "Prüfen Sie vorab, ob Ihnen ein Zuschuss zum Kita-Beitrag zusteht.",
+    disclaimer: "Unverbindliche Orientierung – kein Bescheid. Die verbindliche Berechnung erfolgt durch die Wirtschaftliche Jugendhilfe der Stadt Karlsruhe.",
     privacy: "🔒 Ihre Daten bleiben bei Ihnen – alle Eingaben werden ausschließlich in Ihrem Browser berechnet und nicht gespeichert oder übertragen.",
     schnellpruefung: "Schnellprüfung",
     sozialleistungLabel: "Bezug von Bürgergeld, Wohngeld, Kinderzuschlag oder AsylbLG",
@@ -53,20 +57,21 @@ const T = {
     nettoLabel: "Monatliches Nettoeinkommen",
     nettoHint: "Durchschnitt der letzten 6 Monate inkl. anteiligem Urlaubs-/Weihnachtsgeld. Auch: Krankengeld, Elterngeld, Rente.",
     fahrtkostenLabel: "Fahrtkosten (monatlich)",
-    fahrtkostenHint: "ÖPNV-Monatsticket oder bei PKW: einfache Strecke in km × 0,05 € × 2 × ca. 22 Arbeitstage. Nur ausfüllen bei Berufstätigkeit.",
-    sonstigeLabel: "Sonstige Einkünfte",
-    sonstigeHint: "z.B. Mieteinnahmen, Kapitalerträge, BAföG, Unterhalt für eigene Person",
+    fahrtkostenHint: "ÖPNV-Monatsticket oder bei PKW: einfache Strecke in km × 0,05 € × 2 × ca. 22 Arbeitstage. Nur ausfüllen bei Berufstätigkeit. Wird automatisch vom Einkommen abgezogen.",
+    sonstigeLabel: "Sonstige Einkünfte (monatlich)",
+    sonstigeHint: "Monatlicher Betrag, z.B. Mieteinnahmen, Kapitalerträge, BAföG, Unterhalt für eigene Person",
+    kindergeldAnrechnungHint: `Kindergeld (${KINDERGELD} €) wird automatisch angerechnet – und zwar nur für das Kind, für das der Zuschuss beantragt wird. Bitte nicht zum Nettoeinkommen dazurechnen.`,
     antragskindAbzuege: "Antragskind & Abzüge",
     kindesunterhaltLabel: "Kindesunterhalt (empfangen)",
     kindesunterhaltHint: "Unterhalt/Unterhaltsvorschuss für das Kind, für das beantragt wird",
     versicherungLabel: "Versicherungsbeiträge (Abzug)",
-    versicherungHint: "Monatlicher Betrag. Bei jährlicher Zahlung: Betrag ÷ 12. Hausrat-, Haftpflicht-, Unfallversicherung, Gewerkschaftsbeitrag.",
+    versicherungHint: "Monatlicher Betrag. Bei jährlicher Zahlung: Betrag ÷ 12. Hausrat-, Haftpflicht-, Unfallversicherung, private Krankenversicherung (PKV), Gewerkschaftsbeitrag.",
     besondereBelastungen: "Besondere Belastungen",
     belastungenLabel: "Betreuungsbeiträge anderer Kinder / Unterhalt",
-    belastungenHint: "Monatlicher Betrag. Kita-, Hort-, Kernzeitbeiträge für Geschwisterkinder + Unterhaltszahlungen für Kinder außerhalb des Haushalts. NICHT die Kosten des Antragskindes.",
+    belastungenHint: "Monatlicher Betrag. Kita-, Hort-, Kernzeitbeiträge für Geschwisterkinder (ohne Essensgeld) + Unterhaltszahlungen für Kinder außerhalb des Haushalts. NICHT die Kosten des Antragskindes.",
     kitaBeitrag: "Kita-Beitrag des Antragskindes",
     kitaBeitragLabel: "Monatlicher Elternbeitrag",
-    kitaBeitragHint: "Der Beitrag, der übernommen werden soll",
+    kitaBeitragHint: "Die Gebühr für Kita-/Schulkindbetreuung, die gezahlt wird (ohne Essensgeld).",
     ergebnis: "Voraussichtlicher Zuschuss",
     monatlicheLeistung: "Monatliche Leistung",
     einordnung: "Einordnung",
@@ -79,7 +84,7 @@ const T = {
     autoAngerechnet: "automatisch angerechnet",
     proPerson: "/beruft. Person",
     rechtsgrundlage: "Rechtsgrundlage",
-    stand: "Stand: Mai 2026 · Volt-Fraktion Karlsruhe",
+    stand: "Stand: Juli 2026 · Volt-Fraktion Karlsruhe",
     darüber: "Darüber",
     bis: "bis",
     berechnungAnzeigen: "Berechnung anzeigen ▼",
@@ -89,7 +94,13 @@ const T = {
     nichtBerufstaetig: "Nicht berufstätig",
     arbeitsmittelpauschale: "Arbeitsmittelpauschale",
     kindergeldAntragskind: "Kindergeld (Antragskind)",
-    kindergeldHinweis: "Kindergeld wird nur für das Antragskind (1× 255 €) angerechnet. Bei mehreren Kindern bitte für jedes Kind einzeln rechnen.",
+    kindergeldHinweis: `Kindergeld wird nur für das Antragskind (1× ${KINDERGELD} €) angerechnet. Bei mehreren Kindern bitte für jedes Kind einzeln rechnen.`,
+    nurKarlsruheTitel: "Nur für die Stadt Karlsruhe (ohne Durlach)",
+    nurKarlsruheText: "Der Landkreis Karlsruhe und Durlach haben ein eigenes Verfahren mit anderen Regeln.",
+    ermessensHinweis: "Im tatsächlichen Antragsverfahren können weitere laufende Belastungen anerkannt werden (z.B. besondere Wohnkosten). Das tatsächliche Ergebnis kann daher zu Ihren Gunsten abweichen.",
+    grenznaeheHinweis: "Ihr Ergebnis liegt nahe an der Grenze. Da im Antragsverfahren weitere Belastungen berücksichtigt werden können, empfehlen wir, dennoch einen Antrag zu stellen.",
+    antragLink: "Zum Antrag der Stadt Karlsruhe",
+    butHinweis: "Essenskosten können ggf. gesondert über Bildungs- und Teilhabeleistungen (BuT) beantragt werden.",
     detailEkg1: "Einkommen liegt unter der gesetzlichen Einkommensgrenze (EKG1).",
     detailEkg3: "Einkommen überschreitet EKG1, liegt aber innerhalb der erweiterten Grenze für volle Übernahme (EKG3).",
     detailEkg4: "Einkommen überschreitet EKG3, liegt aber innerhalb der Grenze für hälftige Übernahme (EKG4).",
@@ -99,8 +110,8 @@ const T = {
   en: {
     brand: "Volt Karlsruhe",
     title: "Daycare Subsidy Calculator",
-    subtitle: "Preliminary check per § 90 SGB VIII · Income limits per §§ 85 ff. SGB XII incl. Karlsruhe extension (council decision 2021)",
-    disclaimer: "⚠️ Non-binding estimate – not an official decision. The actual calculation is carried out by the City of Karlsruhe.",
+    subtitle: "Check in advance whether you qualify for a subsidy toward your daycare fee.",
+    disclaimer: "Non-binding estimate – not an official decision. The binding calculation is carried out by the City of Karlsruhe.",
     privacy: "🔒 Your data stays with you – all entries are calculated exclusively in your browser and are not stored or transmitted.",
     schnellpruefung: "Quick check",
     sozialleistungLabel: "Receiving Bürgergeld, housing benefit, child supplement, or AsylbLG benefits",
@@ -115,20 +126,21 @@ const T = {
     nettoLabel: "Monthly net income",
     nettoHint: "Average of the last 6 months incl. holiday/Christmas bonus. Also: sick pay, parental allowance, pension.",
     fahrtkostenLabel: "Commuting costs (monthly)",
-    fahrtkostenHint: "Public transport pass or by car: one-way distance in km × €0.05 × 2 × ~22 working days. Only fill in if employed.",
-    sonstigeLabel: "Other income",
-    sonstigeHint: "e.g. rental income, capital gains, BAföG, alimony received",
+    fahrtkostenHint: "Public transport pass or by car: one-way distance in km × €0.05 × 2 × ~22 working days. Only fill in if employed. Automatically deducted from income.",
+    sonstigeLabel: "Other income (monthly)",
+    sonstigeHint: "Monthly amount, e.g. rental income, capital gains, BAföG, alimony received",
+    kindergeldAnrechnungHint: `Child benefit (€${KINDERGELD}) is counted automatically – and only for the child you are applying for. Please do not add it to your net income.`,
     antragskindAbzuege: "Child & deductions",
     kindesunterhaltLabel: "Child maintenance (received)",
     kindesunterhaltHint: "Maintenance/advance for the child you are applying for",
     versicherungLabel: "Insurance premiums (deduction)",
-    versicherungHint: "Monthly amount. For annual payments: amount ÷ 12. Contents, liability, accident insurance, union dues.",
+    versicherungHint: "Monthly amount. For annual payments: amount ÷ 12. Contents, liability, accident insurance, private health insurance (PKV), union dues.",
     besondereBelastungen: "Special expenses",
     belastungenLabel: "Childcare fees for siblings / maintenance",
-    belastungenHint: "Monthly amount. Daycare, after-school fees for siblings + maintenance for children outside the household. NOT the costs of the child you're applying for.",
+    belastungenHint: "Monthly amount. Daycare, after-school fees for siblings (excluding meal costs) + maintenance for children outside the household. NOT the costs of the child you're applying for.",
     kitaBeitrag: "Daycare fee for this child",
     kitaBeitragLabel: "Monthly parental fee",
-    kitaBeitragHint: "The fee to be covered",
+    kitaBeitragHint: "The daycare/after-school care fee that is paid (excluding meal costs).",
     ergebnis: "Estimated subsidy",
     monatlicheLeistung: "Monthly benefit",
     einordnung: "Breakdown",
@@ -141,7 +153,7 @@ const T = {
     autoAngerechnet: "automatically counted",
     proPerson: "/employed person",
     rechtsgrundlage: "Legal basis",
-    stand: "As of: May 2026 · Volt Karlsruhe",
+    stand: "As of: July 2026 · Volt Karlsruhe",
     darüber: "Above",
     bis: "up to",
     berechnungAnzeigen: "Show calculation ▼",
@@ -151,7 +163,13 @@ const T = {
     nichtBerufstaetig: "Not employed",
     arbeitsmittelpauschale: "Work materials deduction",
     kindergeldAntragskind: "Child benefit (applicant child)",
-    kindergeldHinweis: "Child benefit is only counted for the child you are applying for (1× €255). For multiple children, please calculate separately for each child.",
+    kindergeldHinweis: `Child benefit is only counted for the child you are applying for (1× €${KINDERGELD}). For multiple children, please calculate separately for each child.`,
+    nurKarlsruheTitel: "City of Karlsruhe only (excluding Durlach)",
+    nurKarlsruheText: "The Karlsruhe district (Landkreis) and Durlach have their own procedure with different rules.",
+    ermessensHinweis: "In the actual application process, further ongoing expenses may be recognised (e.g. exceptional housing costs). The actual result may therefore differ in your favour.",
+    grenznaeheHinweis: "Your result is close to the threshold. Since further expenses can be taken into account during the application process, we recommend applying anyway.",
+    antragLink: "To the City of Karlsruhe application",
+    butHinweis: "Meal costs may be claimed separately through the Education and Participation benefits (BuT).",
     detailEkg1: "Income is below the statutory income limit (EKG1).",
     detailEkg3: "Income exceeds EKG1 but is within the extended limit for full coverage (EKG3).",
     detailEkg4: "Income exceeds EKG3 but is within the limit for 50% coverage (EKG4).",
@@ -161,8 +179,8 @@ const T = {
   tr: {
     brand: "Volt Karlsruhe",
     title: "Kreş Yardımı Hesaplayıcı",
-    subtitle: "§ 90 SGB VIII kapsamında ön kontrol · Karlsruhe belediye meclisi kararı (2021) dahil gelir sınırları",
-    disclaimer: "⚠️ Bağlayıcı olmayan ön bilgi – resmi karar değildir. Hesaplama Karlsruhe Şehir İdaresi tarafından yapılır.",
+    subtitle: "Kreş ücretine yönelik bir yardım hakkınız olup olmadığını önceden kontrol edin.",
+    disclaimer: "Bağlayıcı olmayan ön bilgi – resmi karar değildir. Bağlayıcı hesaplama Karlsruhe Şehir İdaresi tarafından yapılır.",
     privacy: "🔒 Verileriniz sizde kalır – tüm girişler yalnızca tarayıcınızda hesaplanır, kaydedilmez veya iletilmez.",
     schnellpruefung: "Hızlı kontrol",
     sozialleistungLabel: "Bürgergeld, konut yardımı, çocuk ek ödeneği veya AsylbLG yardımı alıyor musunuz?",
@@ -177,20 +195,21 @@ const T = {
     nettoLabel: "Aylık net gelir",
     nettoHint: "Son 6 ayın ortalaması (tatil/Noel ikramiyesi dahil). Ayrıca: hastalık parası, ebeveyn ödeneği, emekli maaşı.",
     fahrtkostenLabel: "Ulaşım masrafları (aylık)",
-    fahrtkostenHint: "Toplu taşıma aylık bileti veya araçla: tek yön km × 0,05 € × 2 × ~22 iş günü. Yalnızca çalışıyorsanız doldurun.",
-    sonstigeLabel: "Diğer gelirler",
-    sonstigeHint: "Örn. kira geliri, sermaye kazancı, BAföG, nafaka",
+    fahrtkostenHint: "Toplu taşıma aylık bileti veya araçla: tek yön km × 0,05 € × 2 × ~22 iş günü. Yalnızca çalışıyorsanız doldurun. Gelirden otomatik olarak düşülür.",
+    sonstigeLabel: "Diğer gelirler (aylık)",
+    sonstigeHint: "Aylık tutar, örn. kira geliri, sermaye kazancı, BAföG, nafaka",
+    kindergeldAnrechnungHint: `Çocuk parası (${KINDERGELD} €) otomatik olarak hesaba katılır – yalnızca yardım başvurusu yapılan çocuk için. Lütfen net gelirinize eklemeyin.`,
     antragskindAbzuege: "Başvurulan çocuk ve kesintiler",
     kindesunterhaltLabel: "Çocuk nafakası (alınan)",
     kindesunterhaltHint: "Başvurduğunuz çocuk için alınan nafaka/nafaka avansı",
     versicherungLabel: "Sigorta primleri (kesinti)",
-    versicherungHint: "Aylık tutar. Yıllık ödemelerde: tutar ÷ 12. Ev eşyası, sorumluluk, kaza sigortası, sendika aidatı.",
+    versicherungHint: "Aylık tutar. Yıllık ödemelerde: tutar ÷ 12. Ev eşyası, sorumluluk, kaza sigortası, özel sağlık sigortası (PKV), sendika aidatı.",
     besondereBelastungen: "Özel yükümlülükler",
     belastungenLabel: "Diğer çocukların bakım ücretleri / nafaka",
-    belastungenHint: "Aylık tutar. Kardeşlerin kreş, yurt, okul bakım ücretleri + hane dışındaki çocuklara ödenen nafaka. Başvurulan çocuğun masrafları DEĞİL.",
+    belastungenHint: "Aylık tutar. Kardeşlerin kreş, yurt, okul bakım ücretleri (yemek parası hariç) + hane dışındaki çocuklara ödenen nafaka. Başvurulan çocuğun masrafları DEĞİL.",
     kitaBeitrag: "Başvurulan çocuğun kreş ücreti",
     kitaBeitragLabel: "Aylık ebeveyn katkı payı",
-    kitaBeitragHint: "Karşılanması istenen ücret",
+    kitaBeitragHint: "Ödenen kreş/okul çocuğu bakım ücreti (yemek parası hariç).",
     ergebnis: "Tahmini yardım",
     monatlicheLeistung: "Aylık ödeme",
     einordnung: "Değerlendirme",
@@ -203,7 +222,7 @@ const T = {
     autoAngerechnet: "otomatik dahil",
     proPerson: "/çalışan kişi",
     rechtsgrundlage: "Hukuki dayanak",
-    stand: "Durum: Mayıs 2026 · Volt Karlsruhe",
+    stand: "Durum: Temmuz 2026 · Volt Karlsruhe",
     darüber: "Üstü",
     bis: "kadar",
     berechnungAnzeigen: "Hesaplamayı göster ▼",
@@ -213,7 +232,13 @@ const T = {
     nichtBerufstaetig: "Çalışmıyor",
     arbeitsmittelpauschale: "İş malzemesi kesintisi",
     kindergeldAntragskind: "Çocuk parası (başvurulan çocuk)",
-    kindergeldHinweis: "Çocuk parası yalnızca başvurulan çocuk için (1× 255 €) hesaplanır. Birden fazla çocuk için lütfen her çocuk için ayrı hesaplayın.",
+    kindergeldHinweis: `Çocuk parası yalnızca başvurulan çocuk için (1× ${KINDERGELD} €) hesaplanır. Birden fazla çocuk için lütfen her çocuk için ayrı hesaplayın.`,
+    nurKarlsruheTitel: "Yalnızca Karlsruhe şehri için (Durlach hariç)",
+    nurKarlsruheText: "Karlsruhe ilçesi (Landkreis) ve Durlach'ın farklı kurallara sahip kendi prosedürü vardır.",
+    ermessensHinweis: "Gerçek başvuru sürecinde başka düzenli yükümlülükler de kabul edilebilir (örn. özel konut masrafları). Bu nedenle gerçek sonuç lehinize farklılık gösterebilir.",
+    grenznaeheHinweis: "Sonucunuz sınıra yakın. Başvuru sürecinde başka yükümlülükler de dikkate alınabileceğinden, yine de başvuruda bulunmanızı öneririz.",
+    antragLink: "Karlsruhe şehri başvurusuna git",
+    butHinweis: "Yemek masrafları için ayrıca Eğitim ve Katılım yardımları (BuT) üzerinden başvurulabilir.",
     detailEkg1: "Gelir yasal gelir sınırının (EKG1) altında.",
     detailEkg3: "Gelir EKG1'i aşıyor ancak tam karşılama sınırı (EKG3) dahilinde.",
     detailEkg4: "Gelir EKG3'ü aşıyor ancak %50 karşılama sınırı (EKG4) dahilinde.",
@@ -223,8 +248,8 @@ const T = {
   uk: {
     brand: "Volt Karlsruhe",
     title: "Калькулятор субсидії на дитсадок",
-    subtitle: "Попередня перевірка згідно § 90 SGB VIII · Межі доходу згідно §§ 85 SGB XII вкл. розширення м. Карлсруе (рішення міськради 2021)",
-    disclaimer: "⚠️ Орієнтовний розрахунок – не офіційне рішення. Фактичний розрахунок здійснює міська адміністрація Карлсруе.",
+    subtitle: "Перевірте заздалегідь, чи маєте ви право на субсидію до плати за дитсадок.",
+    disclaimer: "Орієнтовний розрахунок – не офіційне рішення. Обов'язковий розрахунок здійснює міська адміністрація Карлсруе.",
     privacy: "🔒 Ваші дані залишаються у вас – усі введені дані обчислюються виключно у вашому браузері і не зберігаються та не передаються.",
     schnellpruefung: "Швидка перевірка",
     sozialleistungLabel: "Отримуєте Bürgergeld, житлову допомогу, дитячу надбавку або допомогу за AsylbLG?",
@@ -239,20 +264,21 @@ const T = {
     nettoLabel: "Щомісячний чистий дохід",
     nettoHint: "Середнє за останні 6 місяців вкл. відпускні/різдвяні. Також: лікарняні, батьківська допомога, пенсія.",
     fahrtkostenLabel: "Транспортні витрати (щомісяця)",
-    fahrtkostenHint: "Місячний проїзний або авто: відстань в км × 0,05 € × 2 × ~22 робочі дні. Лише для працюючих.",
-    sonstigeLabel: "Інші доходи",
-    sonstigeHint: "Напр. орендний дохід, доходи з капіталу, BAföG, аліменти",
+    fahrtkostenHint: "Місячний проїзний або авто: відстань в км × 0,05 € × 2 × ~22 робочі дні. Лише для працюючих. Автоматично віднімається від доходу.",
+    sonstigeLabel: "Інші доходи (щомісяця)",
+    sonstigeHint: "Місячна сума, напр. орендний дохід, доходи з капіталу, BAföG, аліменти",
+    kindergeldAnrechnungHint: `Допомога на дитину (${KINDERGELD} €) враховується автоматично – і лише для дитини, на яку подається заява. Будь ласка, не додавайте її до чистого доходу.`,
     antragskindAbzuege: "Дитина та відрахування",
     kindesunterhaltLabel: "Аліменти на дитину (отримані)",
     kindesunterhaltHint: "Аліменти/аванс на дитину, на яку подається заява",
     versicherungLabel: "Страхові внески (відрахування)",
-    versicherungHint: "Місячна сума. При річних платежах: сума ÷ 12. Страхування майна, відповідальності, від нещасних випадків.",
+    versicherungHint: "Місячна сума. При річних платежах: сума ÷ 12. Страхування майна, відповідальності, від нещасних випадків, приватне медичне страхування (PKV), профспілкові внески.",
     besondereBelastungen: "Особливі витрати",
     belastungenLabel: "Плата за догляд за іншими дітьми / аліменти",
-    belastungenHint: "Місячна сума. Оплата дитсадка для братів/сестер + аліменти на дітей поза домогосподарством. НЕ витрати на дитину-заявника.",
+    belastungenHint: "Місячна сума. Оплата дитсадка для братів/сестер (без витрат на харчування) + аліменти на дітей поза домогосподарством. НЕ витрати на дитину-заявника.",
     kitaBeitrag: "Плата за дитсадок дитини-заявника",
     kitaBeitragLabel: "Щомісячний батьківський внесок",
-    kitaBeitragHint: "Сума, яку потрібно покрити",
+    kitaBeitragHint: "Плата за дитсадок/групу продовженого дня, яка сплачується (без витрат на харчування).",
     ergebnis: "Очікувана субсидія",
     monatlicheLeistung: "Щомісячна виплата",
     einordnung: "Розподіл",
@@ -265,7 +291,7 @@ const T = {
     autoAngerechnet: "автоматично враховано",
     proPerson: "/працюючу особу",
     rechtsgrundlage: "Правова основа",
-    stand: "Станом на: травень 2026 · Volt Karlsruhe",
+    stand: "Станом на: липень 2026 · Volt Karlsruhe",
     darüber: "Вище",
     bis: "до",
     berechnungAnzeigen: "Показати розрахунок ▼",
@@ -275,7 +301,13 @@ const T = {
     nichtBerufstaetig: "Не працює",
     arbeitsmittelpauschale: "Відрахування на робочі матеріали",
     kindergeldAntragskind: "Допомога на дитину (дитина-заявник)",
-    kindergeldHinweis: "Допомога на дитину враховується лише для дитини-заявника (1× 255 €). При кількох дітях розраховуйте окремо для кожної дитини.",
+    kindergeldHinweis: `Допомога на дитину враховується лише для дитини-заявника (1× ${KINDERGELD} €). При кількох дітях розраховуйте окремо для кожної дитини.`,
+    nurKarlsruheTitel: "Лише для міста Карлсруе (крім Дурлаха)",
+    nurKarlsruheText: "Район Карлсруе (Landkreis) і Дурлах мають власну процедуру з іншими правилами.",
+    ermessensHinweis: "У фактичній процедурі подання заяви можуть бути визнані інші поточні витрати (напр. особливі витрати на житло). Тому фактичний результат може відрізнятися на вашу користь.",
+    grenznaeheHinweis: "Ваш результат близький до межі. Оскільки під час розгляду заяви можуть враховуватися додаткові витрати, ми радимо все одно подати заяву.",
+    antragLink: "До заяви міста Карлсруе",
+    butHinweis: "Витрати на харчування можна за потреби заявити окремо через допомогу на освіту та участь (BuT).",
     detailEkg1: "Дохід нижче законодавчої межі (EKG1).",
     detailEkg3: "Дохід перевищує EKG1, але в межах розширеної межі для повного покриття (EKG3).",
     detailEkg4: "Дохід перевищує EKG3, але в межах межі для 50% покриття (EKG4).",
@@ -285,8 +317,8 @@ const T = {
   ar: {
     brand: "Volt Karlsruhe",
     title: "حاسبة دعم رسوم الحضانة",
-    subtitle: "فحص أولي وفقاً للمادة 90 SGB VIII · حدود الدخل وفقاً للمواد 85 SGB XII بما في ذلك توسيع مدينة كارلسروه (قرار المجلس البلدي 2021)",
-    disclaimer: "⚠️ معلومات إرشادية غير ملزمة – ليست قراراً رسمياً. يتم الحساب الفعلي من قبل إدارة مدينة كارلسروه.",
+    subtitle: "تحقّقوا مسبقاً مما إذا كان يحق لكم دعم لرسوم الحضانة.",
+    disclaimer: "معلومات إرشادية غير ملزمة – ليست قراراً رسمياً. يتم الحساب المُلزِم من قبل إدارة مدينة كارلسروه.",
     privacy: "🔒 بياناتكم تبقى لديكم – يتم حساب جميع المدخلات حصرياً في متصفحكم ولا يتم تخزينها أو نقلها.",
     schnellpruefung: "فحص سريع",
     sozialleistungLabel: "هل تتلقى إعانة المواطن أو بدل السكن أو علاوة الأطفال أو مزايا AsylbLG؟",
@@ -301,20 +333,21 @@ const T = {
     nettoLabel: "صافي الدخل الشهري",
     nettoHint: "متوسط آخر 6 أشهر شاملاً مكافآت الإجازة/عيد الميلاد. أيضاً: إعانة المرض، بدل الوالدية، المعاش.",
     fahrtkostenLabel: "تكاليف التنقل (شهرياً)",
-    fahrtkostenHint: "اشتراك النقل العام أو بالسيارة: المسافة بالكم × 0.05 يورو × 2 × ~22 يوم عمل. فقط إذا كنت تعمل.",
-    sonstigeLabel: "دخل آخر",
-    sonstigeHint: "مثلاً: دخل الإيجار، عوائد رأس المال، BAföG، نفقة مستلمة",
+    fahrtkostenHint: "اشتراك النقل العام أو بالسيارة: المسافة بالكم × 0.05 يورو × 2 × ~22 يوم عمل. فقط إذا كنت تعمل. يتم خصمها تلقائياً من الدخل.",
+    sonstigeLabel: "دخل آخر (شهرياً)",
+    sonstigeHint: "المبلغ الشهري، مثلاً: دخل الإيجار، عوائد رأس المال، BAföG، نفقة مستلمة",
+    kindergeldAnrechnungHint: `يتم احتساب إعانة الأطفال (${KINDERGELD} يورو) تلقائياً – وفقط للطفل المقدَّم له طلب الدعم. يرجى عدم إضافتها إلى صافي الدخل.`,
     antragskindAbzuege: "الطفل المتقدَّم له والخصومات",
     kindesunterhaltLabel: "نفقة الطفل (مستلمة)",
     kindesunterhaltHint: "النفقة/سلفة النفقة للطفل المتقدَّم له",
     versicherungLabel: "أقساط التأمين (خصم)",
-    versicherungHint: "المبلغ الشهري. للمدفوعات السنوية: المبلغ ÷ 12. تأمين المنزل، المسؤولية، الحوادث، رسوم النقابة.",
+    versicherungHint: "المبلغ الشهري. للمدفوعات السنوية: المبلغ ÷ 12. تأمين المنزل، المسؤولية، الحوادث، التأمين الصحي الخاص (PKV)، رسوم النقابة.",
     besondereBelastungen: "أعباء خاصة",
     belastungenLabel: "رسوم رعاية الأطفال الآخرين / نفقة",
-    belastungenHint: "المبلغ الشهري. رسوم الحضانة للأشقاء + نفقة لأطفال خارج الأسرة. ليس تكاليف الطفل المتقدَّم له.",
+    belastungenHint: "المبلغ الشهري. رسوم الحضانة للأشقاء (بدون بدل الطعام) + نفقة لأطفال خارج الأسرة. ليس تكاليف الطفل المتقدَّم له.",
     kitaBeitrag: "رسوم حضانة الطفل المتقدَّم له",
     kitaBeitragLabel: "الرسوم الشهرية للوالدين",
-    kitaBeitragHint: "الرسوم المراد تغطيتها",
+    kitaBeitragHint: "رسوم رعاية الحضانة/رعاية أطفال المدارس المدفوعة (بدون بدل الطعام).",
     ergebnis: "الدعم المتوقع",
     monatlicheLeistung: "المبلغ الشهري",
     einordnung: "التصنيف",
@@ -327,7 +360,7 @@ const T = {
     autoAngerechnet: "محتسب تلقائياً",
     proPerson: "/شخص عامل",
     rechtsgrundlage: "الأساس القانوني",
-    stand: "الحالة: مايو 2026 · Volt Karlsruhe",
+    stand: "الحالة: يوليو 2026 · Volt Karlsruhe",
     darüber: "أعلى",
     bis: "حتى",
     berechnungAnzeigen: "▼ عرض الحساب",
@@ -337,7 +370,13 @@ const T = {
     nichtBerufstaetig: "غير عامل/ة",
     arbeitsmittelpauschale: "خصم مستلزمات العمل",
     kindergeldAntragskind: "إعانة الطفل (الطفل المتقدَّم له)",
-    kindergeldHinweis: "يتم احتساب إعانة الطفل فقط للطفل المتقدَّم له (1× 255 يورو). في حالة وجود عدة أطفال، يرجى الحساب لكل طفل على حدة.",
+    kindergeldHinweis: `يتم احتساب إعانة الطفل فقط للطفل المتقدَّم له (1× ${KINDERGELD} يورو). في حالة وجود عدة أطفال، يرجى الحساب لكل طفل على حدة.`,
+    nurKarlsruheTitel: "لمدينة كارلسروه فقط (باستثناء دورلاخ)",
+    nurKarlsruheText: "لمقاطعة كارلسروه (Landkreis) ودورلاخ إجراءات خاصة بها وبقواعد مختلفة.",
+    ermessensHinweis: "في إجراءات التقديم الفعلية، يمكن الاعتراف بأعباء جارية إضافية (مثل تكاليف السكن الاستثنائية). لذلك قد تختلف النتيجة الفعلية لصالحكم.",
+    grenznaeheHinweis: "نتيجتكم قريبة من الحد. وبما أنه يمكن مراعاة أعباء إضافية أثناء إجراءات التقديم، ننصح بتقديم الطلب على أي حال.",
+    antragLink: "إلى طلب مدينة كارلسروه",
+    butHinweis: "يمكن عند الاقتضاء طلب تكاليف الطعام بشكل منفصل عبر مزايا التعليم والمشاركة (BuT).",
     detailEkg1: "الدخل أقل من حد الدخل القانوني (EKG1).",
     detailEkg3: "الدخل يتجاوز EKG1 لكنه ضمن الحد الموسع للتغطية الكاملة (EKG3).",
     detailEkg4: "الدخل يتجاوز EKG3 لكنه ضمن حد التغطية بنسبة 50٪ (EKG4).",
@@ -358,7 +397,7 @@ function berechne(input, lang) {
   } = input;
 
   if (beziehtSozialleistung) {
-    return { einkommen: null, ekg1: null, ekg3: null, ekg4: null, pct: 100, leistung: kitaBeitrag, stufe: "sozial", details: t.detailSozial };
+    return { einkommen: null, ekg1: null, ekg3: null, ekg4: null, pct: 100, leistung: kitaBeitrag, stufe: "sozial", details: t.detailSozial, nahGrenze: false };
   }
 
   const abzugE1 = ((nettoE1 || 0) > 0) ? ARBEITSMITTEL_PAUSCHALE + (fahrtkostenE1 || 0) : 0;
@@ -380,8 +419,12 @@ function berechne(input, lang) {
   else if (gesamt <= ekg4) { pct = 50; stufe = "EKG4"; details = t.detailEkg4; }
   else { pct = 0; stufe = "none"; details = t.detailNone; }
 
+  // Reine Anzeige-Information — verändert weder pct noch leistung: Einkommen
+  // liegt über EKG4, aber weniger als 10 % darüber (Antrag lohnt sich trotzdem).
+  const nahGrenze = gesamt > ekg4 && gesamt < ekg4 * GRENZNAEHE_TOLERANZ;
+
   const r = (v) => Math.round(v * 100) / 100;
-  return { einkommen: r(gesamt), ekg1: r(ekg1), ekg3: r(ekg3), ekg4: r(ekg4), pct, leistung: r(kitaBeitrag * pct / 100), stufe, details };
+  return { einkommen: r(gesamt), ekg1: r(ekg1), ekg3: r(ekg3), ekg4: r(ekg4), pct, leistung: r(kitaBeitrag * pct / 100), stufe, details, nahGrenze };
 }
 
 // ─── UI COMPONENTS ───────────────────────────────────────────
@@ -484,8 +527,19 @@ function KitaZuschussRechner() {
         </div>
       </div>
 
-      {/* Disclaimer (compact) */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-5 text-[11px] text-amber-700 leading-snug">{t.disclaimer}</div>
+      {/* Geltungsbereich + Unverbindlich-Hinweis in EINER Box, klar priorisiert:
+          zuerst der Geltungsbereich (die "bin ich hier richtig?"-Info), darunter
+          kleiner der Unverbindlich-Hinweis. Bewusst blau statt rot/gelb:
+          Abgrenzung, keine Warnung — auffällig, aber nicht alarmierend. */}
+      <div className="bg-sky-50 border border-sky-200 rounded-lg px-3.5 py-2.5 mb-5 flex items-start gap-2.5">
+        <span className="text-base leading-none mt-0.5 flex-shrink-0">📍</span>
+        <div className="min-w-0">
+          <p className="text-[12px] font-bold text-sky-900 leading-snug">{t.nurKarlsruheTitel}</p>
+          <p className="text-[11px] text-sky-800 leading-snug mt-0.5">{t.nurKarlsruheText}</p>
+          <div className="border-t border-sky-200 my-1.5" />
+          <p className="text-[11px] text-sky-700 leading-snug">{t.disclaimer}</p>
+        </div>
+      </div>
 
       {/* Schnellprüfung */}
       <Section title={t.schnellpruefung} accentColor="#16a34a">
@@ -517,6 +571,11 @@ function KitaZuschussRechner() {
           </Section>
 
           <Section title={isAlleinerziehend ? t.einkommen : t.einkommenElternteil1}>
+            {/* Häufigster Eingabefehler laut GEB: Kindergeld wird ins Netto
+                eingerechnet und damit doppelt gezählt. */}
+            <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 mb-3.5 text-[11px] text-slate-600 leading-snug">
+              ℹ️ {t.kindergeldAnrechnungHint}
+            </div>
             <NumField label={t.nettoLabel} value={nettoE1} onChange={setNettoE1} hint={t.nettoHint} />
             <NumField label={t.fahrtkostenLabel} value={fahrtkostenE1} onChange={setFahrtkostenE1} hint={t.fahrtkostenHint} />
             <NumField label={t.sonstigeLabel} value={sonstigeE1} onChange={setSonstigeE1} hint={t.sonstigeHint} />
@@ -717,6 +776,28 @@ function KitaZuschussRechner() {
                   </div>
                 </div>
               )}
+
+              {/* ═══ HINWEISE & ANTRAG ═══ */}
+              <div className="border-t pt-4 mt-4" style={{ borderColor: resultBorder }}>
+                {/* Knapp über EKG4: rechnerisch 0 %, praktisch aussichtsreich. */}
+                {r.nahGrenze && (
+                  <div className="bg-white/70 border border-amber-200 rounded-lg px-3 py-2.5 mb-2.5 text-[11px] text-slate-700 leading-snug">
+                    💡 {t.grenznaeheHinweis}
+                  </div>
+                )}
+
+                {/* Antrag lohnt sich bei Zuschuss > 0 % und im Grenzfall. */}
+                {(r.pct > 0 || r.nahGrenze) && (
+                  <a href={ANTRAG_URL} target="_blank" rel="noopener noreferrer"
+                    className="block w-full text-center px-4 py-2.5 mb-2.5 rounded-lg text-[13px] font-bold text-white no-underline transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: VOLT }}>
+                    {t.antragLink} {dir === "rtl" ? "←" : "→"}
+                  </a>
+                )}
+
+                <p className="text-[10px] text-slate-400 leading-relaxed">ℹ️ {t.ermessensHinweis}</p>
+                <p className="text-[10px] text-slate-400 leading-relaxed mt-1.5">🍽️ {t.butHinweis}</p>
+              </div>
             </div>
           </div>
         );

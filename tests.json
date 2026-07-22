@@ -1,0 +1,641 @@
+[
+ {
+  "id": "T01",
+  "desc": "Sozialleistungsbezug: automatisch 100 %, keine EinkommensprÃ¼fung",
+  "input": {
+   "beziehtSozialleistung": true,
+   "kitaBeitrag": 456
+  },
+  "expected": {
+   "stufe": "sozial",
+   "pct": 100,
+   "leistung": 456
+  }
+ },
+ {
+  "id": "T02",
+  "desc": "Sozialleistungsbezug, Beitrag 0 â¬: Leistung 0 â¬",
+  "input": {
+   "beziehtSozialleistung": true,
+   "kitaBeitrag": 0
+  },
+  "expected": {
+   "stufe": "sozial",
+   "pct": 100,
+   "leistung": 0
+  }
+ },
+ {
+  "id": "T03",
+  "desc": "HH4: Kindergeld-ErhÃ¶hung 2026 hebt dasselbe Netto 4 â¬ Ã¼ber EKG1 (3.341 â¬) â jetzt EKG3, 100 % (vormals exakt auf EKG1). Hinweis: dedizierter EKG1-Inklusiv-Grenztest fehlt seither.",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "kitaBeitrag": 450,
+   "nettoE1": 3091.2
+  },
+  "expected": {
+   "stufe": "EKG3",
+   "pct": 100,
+   "leistung": 450,
+   "einkommen": 3345,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T04",
+  "desc": "HH4: 5 â¬ Ã¼ber EKG1 â EKG3, 100 %",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "kitaBeitrag": 450,
+   "nettoE1": 3096.2
+  },
+  "expected": {
+   "stufe": "EKG3",
+   "pct": 100,
+   "leistung": 450,
+   "einkommen": 3350,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T05",
+  "desc": "HH4: 5 â¬ unter EKG3 (~4009.2 â¬) â EKG3, 100 %",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "kitaBeitrag": 450,
+   "nettoE1": 3754.4
+  },
+  "expected": {
+   "stufe": "EKG3",
+   "pct": 100,
+   "leistung": 450,
+   "einkommen": 4008.2,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T06",
+  "desc": "HH4: 5 â¬ Ã¼ber EKG3 â EKG4, 50 %",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "kitaBeitrag": 450,
+   "nettoE1": 3764.4
+  },
+  "expected": {
+   "stufe": "EKG4",
+   "pct": 50,
+   "leistung": 225,
+   "einkommen": 4018.2,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T07",
+  "desc": "HH4: 5 â¬ unter EKG4 (~4343.3 â¬) â EKG4, 50 %",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "kitaBeitrag": 450,
+   "nettoE1": 4088.5
+  },
+  "expected": {
+   "stufe": "EKG4",
+   "pct": 50,
+   "leistung": 225,
+   "einkommen": 4342.3,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T08",
+  "desc": "HH4: 5 â¬ Ã¼ber EKG4 â keine FÃ¶rderung, 0 %",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "kitaBeitrag": 450,
+   "nettoE1": 4098.5
+  },
+  "expected": {
+   "stufe": "none",
+   "pct": 0,
+   "leistung": 0,
+   "einkommen": 4352.3,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T09",
+  "desc": "HH2: EKG1 muss 2264 â¬ betragen (niedriges Einkommen â EKG1)",
+  "input": {
+   "haushaltGroesse": 2,
+   "isAlleinerziehend": true,
+   "nettoE1": 1000,
+   "kitaBeitrag": 300
+  },
+  "expected": {
+   "stufe": "EKG1",
+   "pct": 100,
+   "leistung": 300,
+   "einkommen": 1253.8,
+   "ekg1": 2264,
+   "ekg3": 2716.8,
+   "ekg4": 2943.2
+  }
+ },
+ {
+  "id": "T10",
+  "desc": "HH3: EKG1 muss 2800 â¬ betragen (niedriges Einkommen â EKG1)",
+  "input": {
+   "haushaltGroesse": 3,
+   "isAlleinerziehend": true,
+   "nettoE1": 1000,
+   "kitaBeitrag": 300
+  },
+  "expected": {
+   "stufe": "EKG1",
+   "pct": 100,
+   "leistung": 300,
+   "einkommen": 1253.8,
+   "ekg1": 2800,
+   "ekg3": 3360,
+   "ekg4": 3640
+  }
+ },
+ {
+  "id": "T11",
+  "desc": "HH5: EKG1 muss 3884 â¬ betragen (niedriges Einkommen â EKG1)",
+  "input": {
+   "haushaltGroesse": 5,
+   "isAlleinerziehend": true,
+   "nettoE1": 1000,
+   "kitaBeitrag": 300
+  },
+  "expected": {
+   "stufe": "EKG1",
+   "pct": 100,
+   "leistung": 300,
+   "einkommen": 1253.8,
+   "ekg1": 3884,
+   "ekg3": 4660.8,
+   "ekg4": 5049.2
+  }
+ },
+ {
+  "id": "T12",
+  "desc": "HH6: EKG1 muss 4422 â¬ betragen (niedriges Einkommen â EKG1)",
+  "input": {
+   "haushaltGroesse": 6,
+   "isAlleinerziehend": true,
+   "nettoE1": 1000,
+   "kitaBeitrag": 300
+  },
+  "expected": {
+   "stufe": "EKG1",
+   "pct": 100,
+   "leistung": 300,
+   "einkommen": 1253.8,
+   "ekg1": 4422,
+   "ekg3": 5306.4,
+   "ekg4": 5748.6
+  }
+ },
+ {
+  "id": "T13",
+  "desc": "Netto 0 bei E1: KEIN Arbeitsmittel-Abzug (nur Sonstige + Kindergeld)",
+  "input": {
+   "haushaltGroesse": 3,
+   "isAlleinerziehend": true,
+   "nettoE1": 0,
+   "sonstigeE1": 800,
+   "kitaBeitrag": 300
+  },
+  "expected": {
+   "stufe": "EKG1",
+   "pct": 100,
+   "leistung": 300,
+   "einkommen": 1059,
+   "ekg1": 2800,
+   "ekg3": 3360,
+   "ekg4": 3640
+  }
+ },
+ {
+  "id": "T14",
+  "desc": "Beide Eltern berufstÃ¤tig: Arbeitsmittel 2Ã abgezogen, Fahrtkosten je Person",
+  "input": {
+   "haushaltGroesse": 4,
+   "nettoE1": 2000,
+   "fahrtkostenE1": 50,
+   "nettoE2": 1500,
+   "fahrtkostenE2": 30,
+   "kitaBeitrag": 450
+  },
+  "expected": {
+   "stufe": "EKG3",
+   "pct": 100,
+   "leistung": 450,
+   "einkommen": 3668.6,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T15",
+  "desc": "Alleinerziehend: nettoE2 wird ignoriert, auch wenn gesetzt",
+  "input": {
+   "haushaltGroesse": 3,
+   "isAlleinerziehend": true,
+   "nettoE1": 2200,
+   "nettoE2": 9999,
+   "kitaBeitrag": 400
+  },
+  "expected": {
+   "stufe": "EKG1",
+   "pct": 100,
+   "leistung": 400,
+   "einkommen": 2453.8,
+   "ekg1": 2800,
+   "ekg3": 3360,
+   "ekg4": 3640
+  }
+ },
+ {
+  "id": "T16",
+  "desc": "VersicherungsbeitrÃ¤ge mindern Einkommen",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "nettoE1": 3141.2,
+   "versicherungAbzug": 50,
+   "kitaBeitrag": 450
+  },
+  "expected": {
+   "stufe": "EKG3",
+   "pct": 100,
+   "leistung": 450,
+   "einkommen": 3345,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T17",
+  "desc": "Kindesunterhalt erhÃ¶ht Einkommen",
+  "input": {
+   "haushaltGroesse": 3,
+   "isAlleinerziehend": true,
+   "nettoE1": 1800,
+   "kindesunterhalt": 300,
+   "kitaBeitrag": 350
+  },
+  "expected": {
+   "stufe": "EKG1",
+   "pct": 100,
+   "leistung": 350,
+   "einkommen": 2353.8,
+   "ekg1": 2800,
+   "ekg3": 3360,
+   "ekg4": 3640
+  }
+ },
+ {
+  "id": "T18",
+  "desc": "HH3: 100 â¬ Ã¼ber EKG3 ohne Belastungen â EKG4, 50 %",
+  "input": {
+   "haushaltGroesse": 3,
+   "isAlleinerziehend": true,
+   "nettoE1": 3210.2,
+   "kitaBeitrag": 450
+  },
+  "expected": {
+   "stufe": "EKG4",
+   "pct": 50,
+   "leistung": 225,
+   "einkommen": 3464,
+   "ekg1": 2800,
+   "ekg3": 3360,
+   "ekg4": 3640
+  }
+ },
+ {
+  "id": "T19",
+  "desc": "HH3: gleiches Einkommen + 150 â¬ besondere Belastungen â zurÃ¼ck in EKG3, 100 %",
+  "input": {
+   "haushaltGroesse": 3,
+   "isAlleinerziehend": true,
+   "nettoE1": 3210.2,
+   "besondereBelastungen": 150,
+   "kitaBeitrag": 450
+  },
+  "expected": {
+   "stufe": "EKG3",
+   "pct": 100,
+   "leistung": 450,
+   "einkommen": 3464,
+   "ekg1": 2800,
+   "ekg3": 3510,
+   "ekg4": 3790
+  }
+ },
+ {
+  "id": "T20",
+  "desc": "Besondere Belastungen verschieben EKG1 NICHT (Einkommen knapp Ã¼ber EKG1 bleibt EKG3)",
+  "input": {
+   "haushaltGroesse": 3,
+   "isAlleinerziehend": true,
+   "nettoE1": 2600.2,
+   "besondereBelastungen": 500,
+   "kitaBeitrag": 450
+  },
+  "expected": {
+   "stufe": "EKG3",
+   "pct": 100,
+   "leistung": 450,
+   "einkommen": 2854,
+   "ekg1": 2800,
+   "ekg3": 3860,
+   "ekg4": 4140
+  }
+ },
+ {
+  "id": "T21",
+  "desc": "Klippe EâF: knapp unter EKG3 â 100 % (450 â¬ Zuschuss)",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "kitaBeitrag": 450,
+   "nettoE1": 3739.4
+  },
+  "expected": {
+   "stufe": "EKG3",
+   "pct": 100,
+   "leistung": 450,
+   "einkommen": 3993.2,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T22",
+  "desc": "Klippe EâF: +50 â¬ Gehalt â EKG4, nur noch 50 % (225 â¬ Zuschuss)",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "kitaBeitrag": 450,
+   "nettoE1": 3789.4
+  },
+  "expected": {
+   "stufe": "EKG4",
+   "pct": 50,
+   "leistung": 225,
+   "einkommen": 4043.2,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T23",
+  "desc": "Klippe GâH: knapp unter EKG4 â 50 %",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "kitaBeitrag": 450,
+   "nettoE1": 4073.5
+  },
+  "expected": {
+   "stufe": "EKG4",
+   "pct": 50,
+   "leistung": 225,
+   "einkommen": 4327.3,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T24",
+  "desc": "Klippe GâH: +70 â¬ Ãberstunden â 0 %",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "kitaBeitrag": 450,
+   "nettoE1": 4143.5
+  },
+  "expected": {
+   "stufe": "none",
+   "pct": 0,
+   "leistung": 0,
+   "einkommen": 4397.3,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T25",
+  "desc": "Klippe an EKG4: 514 â¬ (AWO)-Fall kippt durch Kindergeld-ErhÃ¶hung 2026 knapp Ã¼ber EKG4 â 0 % (vormals 50 % / 257 â¬)",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "kitaBeitrag": 514,
+   "nettoE1": 4092.5
+  },
+  "expected": {
+   "stufe": "none",
+   "pct": 0,
+   "leistung": 0,
+   "einkommen": 4346.3,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T26",
+  "desc": "Leistung bei 0 %: immer 0 â¬, unabhÃ¤ngig vom Beitrag",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "kitaBeitrag": 491,
+   "nettoE1": 4593.5
+  },
+  "expected": {
+   "stufe": "none",
+   "pct": 0,
+   "leistung": 0,
+   "einkommen": 4847.3,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T27",
+  "desc": "Krumme BetrÃ¤ge: 456 â¬ Referenzbeitrag bei 100 %",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "nettoE1": 2500,
+   "kitaBeitrag": 456
+  },
+  "expected": {
+   "stufe": "EKG1",
+   "pct": 100,
+   "leistung": 456,
+   "einkommen": 2753.8,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T28",
+  "desc": "Fahrtkosten senken Einkommen unter EKG3-Grenze (Grenzfall mit Abzug)",
+  "input": {
+   "haushaltGroesse": 4,
+   "isAlleinerziehend": true,
+   "kitaBeitrag": 450,
+   "nettoE1": 3839.4,
+   "fahrtkostenE1": 100
+  },
+  "expected": {
+   "stufe": "EKG3",
+   "pct": 100,
+   "leistung": 450,
+   "einkommen": 3993.2,
+   "ekg1": 3341,
+   "ekg3": 4009.2,
+   "ekg4": 4343.3
+  }
+ },
+ {
+  "id": "T29",
+  "desc": "Verwaltungsbeispiel 1: 3 Pers., alleinerziehend, Netto 3.500, FK 58, bes. Bel. 80, Beitrag 450",
+  "input": {
+   "haushaltGroesse": 3,
+   "isAlleinerziehend": true,
+   "nettoE1": 3500,
+   "fahrtkostenE1": 58,
+   "besondereBelastungen": 80,
+   "kitaBeitrag": 450
+  },
+  "expected": {
+   "einkommen": 3695.8,
+   "ekg1": 2800,
+   "ekg3": 3440,
+   "ekg4": 3720,
+   "stufe": "EKG4",
+   "pct": 50,
+   "leistung": 225
+  },
+  "quelle": "BTB 02292 Anlage, Sheet 'Berechnungsbeispiele' (verwaltungsintern verifiziert; Original mit Kindergeld 255 € — anrechenbares Einkommen hier +4 € wg. Erhöhung 2026, Stufe/Prozent/Leistung unverändert)"
+ },
+ {
+  "id": "T30",
+  "desc": "Verwaltungsbeispiel 2: 4 Pers., nur Mutter erwerbstÃ¤tig (3.900, FK 58), bes. Bel. 120, Beitrag 394",
+  "input": {
+   "haushaltGroesse": 4,
+   "nettoE1": 3900,
+   "fahrtkostenE1": 58,
+   "besondereBelastungen": 120,
+   "kitaBeitrag": 394
+  },
+  "expected": {
+   "einkommen": 4095.8,
+   "ekg1": 3341,
+   "ekg3": 4129.2,
+   "ekg4": 4463.3,
+   "stufe": "EKG3",
+   "pct": 100,
+   "leistung": 394
+  },
+  "quelle": "BTB 02292 Anlage, Sheet 'Berechnungsbeispiele' (verwaltungsintern verifiziert; Original mit Kindergeld 255 € — anrechenbares Einkommen hier +4 € wg. Erhöhung 2026, Stufe/Prozent/Leistung unverändert)"
+ },
+ {
+  "id": "T31",
+  "desc": "Verwaltungsbeispiel 3: 4 Pers., nur Vater erwerbstÃ¤tig (4.000, FK 83,20), bes. Bel. 120, Beitrag 394",
+  "input": {
+   "haushaltGroesse": 4,
+   "nettoE2": 4000,
+   "fahrtkostenE2": 83.2,
+   "besondereBelastungen": 120,
+   "kitaBeitrag": 394
+  },
+  "expected": {
+   "einkommen": 4170.6,
+   "ekg1": 3341,
+   "ekg3": 4129.2,
+   "ekg4": 4463.3,
+   "stufe": "EKG4",
+   "pct": 50,
+   "leistung": 197
+  },
+  "quelle": "BTB 02292 Anlage, Sheet 'Berechnungsbeispiele' (verwaltungsintern verifiziert; Original mit Kindergeld 255 € — anrechenbares Einkommen hier +4 € wg. Erhöhung 2026, Stufe/Prozent/Leistung unverändert)"
+ },
+ {
+  "id": "T32",
+  "desc": "Verwaltungsbeispiel 4: 4 Pers., beide erwerbstÃ¤tig (1.200/FK 58 + 3.500/FK 83,20), bes. Bel. 554,50, Beitrag 290",
+  "input": {
+   "haushaltGroesse": 4,
+   "nettoE1": 1200,
+   "fahrtkostenE1": 58,
+   "nettoE2": 3500,
+   "fahrtkostenE2": 83.2,
+   "besondereBelastungen": 554.5,
+   "kitaBeitrag": 290
+  },
+  "expected": {
+   "einkommen": 4807.4,
+   "ekg1": 3341,
+   "ekg3": 4563.7,
+   "ekg4": 4897.8,
+   "stufe": "EKG4",
+   "pct": 50,
+   "leistung": 145
+  },
+  "quelle": "BTB 02292 Anlage, Sheet 'Berechnungsbeispiele' (verwaltungsintern verifiziert; Original mit Kindergeld 255 € — anrechenbares Einkommen hier +4 € wg. Erhöhung 2026, Stufe/Prozent/Leistung unverändert)"
+ },
+ {
+  "id": "T33",
+  "desc": "Verwaltungsbeispiel 5: 5 Pers., beide erwerbstÃ¤tig (1.330/FK 58 + 2.070/FK 58), bes. Bel. 104, Beitrag 412",
+  "input": {
+   "haushaltGroesse": 5,
+   "nettoE1": 1330,
+   "fahrtkostenE1": 58,
+   "nettoE2": 2070,
+   "fahrtkostenE2": 58,
+   "besondereBelastungen": 104,
+   "kitaBeitrag": 412
+  },
+  "expected": {
+   "einkommen": 3532.6,
+   "ekg1": 3884,
+   "ekg3": 4764.8,
+   "ekg4": 5153.2,
+   "stufe": "EKG1",
+   "pct": 100,
+   "leistung": 412
+  },
+  "quelle": "BTB 02292 Anlage, Sheet 'Berechnungsbeispiele' (verwaltungsintern verifiziert; Original mit Kindergeld 255 € — anrechenbares Einkommen hier +4 € wg. Erhöhung 2026, Stufe/Prozent/Leistung unverändert)"
+ }
+]
